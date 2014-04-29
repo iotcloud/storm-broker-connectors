@@ -22,18 +22,18 @@ public class StormTest {
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
 
-        JMSSpout spout = new JMSSpout(new Configurator("tcp://localhost:61616", 1), null);
+        JMSSpout spout = new JMSSpout(new Configurator("tcp://localhost:61616", 10), null);
         builder.setSpout("word", spout, 1);
-        builder.setBolt("time1", new PerfAggrBolt(), 2).shuffleGrouping("word");
+        builder.setBolt("time1", new PerfAggrBolt(), 1).shuffleGrouping("word");
 
         Config conf = new Config();
         if (args != null && args.length > 0) {
-            conf.setNumWorkers(6);
+            conf.setNumWorkers(2);
             StormSubmitter.submitTopology("test", conf, builder.createTopology());
         } else {
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology("test", conf, builder.createTopology());
-            Thread.sleep(60000);
+            Thread.sleep(6000000);
             cluster.killTopology("test");
             cluster.shutdown();
         }
@@ -85,6 +85,8 @@ public class StormTest {
                 for (int i = 0; i < number; i++) {
                     this.destinations.put(queueName + i, session.createQueue(queueName + i));
                 }
+
+                connection.close();
             } catch (JMSException e) {
                 e.printStackTrace();
             }
@@ -92,7 +94,7 @@ public class StormTest {
 
         @Override
         public int ackMode() {
-            return 0;
+            return Session.AUTO_ACKNOWLEDGE;
         }
 
         @Override

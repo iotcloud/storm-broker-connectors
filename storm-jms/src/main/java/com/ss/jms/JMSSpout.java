@@ -5,6 +5,7 @@ import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
+import backtype.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +105,9 @@ public class JMSSpout extends BaseRichSpout {
     @Override
     public void nextTuple() {
         JMSMessage message;
-        while ((message = messages.poll()) != null) {
+        //while ((message = messages.poll()) != null) {
+        message = messages.poll();
+        if (message != null) {
             List<Object> tuple = configurator.getMessageBuilder().deSerialize(message.getMessage());
             if (!tuple.isEmpty()) {
                 try {
@@ -118,7 +121,7 @@ public class JMSSpout extends BaseRichSpout {
                         // JMS acknowledge later
                         this.pendingMessages.put(message.getMessage().getJMSMessageID(), message.getMessage());
                     } else {
-                        this.collector.emit(tuple);
+                        this.collector.emit(tuple, message.getMessage().getJMSMessageID());
                     }
                 } catch (JMSException e) {
                     String s = "Failed to process the message";
