@@ -26,11 +26,16 @@ public class JMSConsumer {
 
     private Lock lock = new ReentrantLock();
 
-    public JMSConsumer(ConnectionFactory cf, int ackMode, Logger logger, BlockingQueue<JMSMessage> messages) {
+    private String queue;
+
+    public JMSConsumer(String queue, ConnectionFactory cf, int ackMode, Logger logger,
+                       BlockingQueue<JMSMessage> messages, Destination destination) {
         this.cf = cf;
         this.ackMode = ackMode;
         this.logger = logger;
         this.messages = messages;
+        this.destination = destination;
+        this.queue = queue;
     }
 
     public void open() {
@@ -39,11 +44,33 @@ public class JMSConsumer {
             this.session = connection.createSession(false, this.ackMode);
             this.connection.start();
 
-
+            MessageConsumer consumer = session.createConsumer(destination);
+            consumer.setMessageListener(new MessageListener() {
+                @Override
+                public void onMessage(Message message) {
+                    try {
+                        messages.put(new JMSMessage(message, queue));
+                    } catch (InterruptedException e) {
+                        logger.warn("Error occurred while putting the message to queue", e);
+                    }
+                }
+            });
         } catch (JMSException e) {
             String s = "Failed to create the JMS Connection";
             logger.error(s, e);
             throw new RuntimeException(s, e);
+        }
+    }
+
+    public void close() {
+        try {
+            if (session != null) {
+                session.close();
+            }
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (JMSException ignored) {
         }
     }
 

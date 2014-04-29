@@ -1,5 +1,6 @@
 package com.ss.jms;
 
+import backtype.storm.messaging.local;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -46,40 +47,58 @@ public class JMSSpout extends BaseRichSpout {
 
     @Override
     public void open(Map conf, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
-
-//        Integer topologyTimeout = (Integer)conf.get("topology.message.timeout.secs");
-//        // TODO fine a way to get the default timeout from storm, so we're not hard-coding to 30 seconds (it could change)
-//        topologyTimeout = topologyTimeout == null ? 30 : topologyTimeout;
-//        if( (topologyTimeout.intValue() * 1000 )> this.recoveryPeriod){
-//            logger.warn("*** WARNING *** : " +
-//                    "Recovery period ("+ this.recoveryPeriod + " ms.) is less then the configured " +
-//                    "'topology.message.timeout.secs' of " + topologyTimeout +
-//                    " secs. This could lead to a message replay flood!");
-//        }
-
         this.messages = new ArrayBlockingQueue<JMSMessage>(configurator.queueSize());
         this.collector = spoutOutputCollector;
 
         try {
             ConnectionFactory cf = this.configurator.connectionFactory();
             for (Map.Entry<String, Destination> e : configurator.destinations().entrySet()) {
-                JMSConsumer consumer = new JMSConsumer(cf, configurator.ackMode(), logger, messages);
+                JMSConsumer consumer = new JMSConsumer(e.getKey(), cf, configurator.ackMode(), logger, messages, e.getValue());
                 consumer.open();
+
+                messageConsumers.put(e.getKey(), consumer);
             }
         } catch (Exception e) {
             logger.warn("Error creating JMS connection.", e);
         }
+    }
 
+    @Override
+    public void close() {
+        super.close();
+        for (JMSConsumer consumer : messageConsumers.values()) {
+            consumer.close();
+        }
     }
 
     @Override
     public void ack(Object msgId) {
-        super.ack(msgId);
+        Message msg = this.pendingMessages.remove(msgId.toString());
+        if (msg != null) {
+            try {
+                msg.acknowledge();
+                logger.debug("JMS Message acked: " + msgId);
+            } catch (JMSException e) {
+                logger.warn("Error acknowldging JMS message: " + msgId, e);
+            }
+        } else {
+            logger.warn("Couldn't acknowledge unknown JMS message ID: " + msgId);
+        }
     }
 
     @Override
     public void fail(Object msgId) {
-        super.fail(msgId);
+        Message msg = this.pendingMessages.remove(msgId.toString());
+        if (msg != null) {
+            try {
+                msg.acknowledge();
+                logger.debug("JMS Message acked: " + msgId);
+            } catch (JMSException e) {
+                logger.warn("Error acknowldging JMS message: " + msgId, e);
+            }
+        } else {
+            logger.warn("Couldn't acknowledge unknown JMS message ID: " + msgId);
+        }
     }
 
     @Override
