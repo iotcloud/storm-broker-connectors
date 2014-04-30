@@ -83,7 +83,9 @@ public class JMSSpout extends BaseRichSpout {
                 logger.warn("Error acknowldging JMS message: " + msgId, e);
             }
         } else {
-            logger.warn("Couldn't acknowledge unknown JMS message ID: " + msgId);
+            if (configurator.ackMode() != Session.AUTO_ACKNOWLEDGE) {
+                logger.warn("Couldn't acknowledge unknown JMS message ID: " + msgId);
+            }
         }
     }
 
@@ -105,9 +107,9 @@ public class JMSSpout extends BaseRichSpout {
     @Override
     public void nextTuple() {
         JMSMessage message;
-        //while ((message = messages.poll()) != null) {
-        message = messages.poll();
-        if (message != null) {
+        while ((message = messages.poll()) != null) {
+//        message = messages.poll();
+//        if (message != null) {
             List<Object> tuple = configurator.getMessageBuilder().deSerialize(message.getMessage());
             if (!tuple.isEmpty()) {
                 try {

@@ -22,7 +22,7 @@ public class StormTest {
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
 
-        JMSSpout spout = new JMSSpout(new Configurator("tcp://localhost:61616", 10), null);
+        JMSSpout spout = new JMSSpout(new Configurator("tcp://localhost:61616", 100), null);
         builder.setSpout("word", spout, 1);
         builder.setBolt("time1", new PerfAggrBolt(), 1).shuffleGrouping("word");
 
