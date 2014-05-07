@@ -10,8 +10,6 @@
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
-    <groupId>storm-rabbitmq</groupId>
     <artifactId>storm-rabbitmq</artifactId>
 
     <properties>

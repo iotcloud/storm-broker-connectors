@@ -10,6 +10,7 @@
     <modules>
         <module>storm-rabbitmq</module>
         <module>storm-jms</module>
+        <module>storm-mqtt</module>
         <!--<module>storm-jms</module>-->
     </modules>
 
