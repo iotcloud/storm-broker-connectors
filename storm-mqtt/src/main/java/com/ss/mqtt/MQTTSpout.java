@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class MQTTSpout extends BaseRichSpout {
@@ -34,6 +35,7 @@ public class MQTTSpout extends BaseRichSpout {
     public MQTTSpout(MQTTConfigurator configurator, Logger logger) {
         this.configurator = configurator;
         this.logger = logger;
+        this.messages = new ArrayBlockingQueue<Message>(configurator.queueSize());
     }
 
     @Override

@@ -15,4 +15,6 @@ public interface MQTTConfigurator {
     MessageBuilder getMessageBuilder();
 
     QoS qosLevel();
+
+    int queueSize();
 }
