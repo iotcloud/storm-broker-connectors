@@ -22,7 +22,7 @@ public class MQTTSpout extends BaseRichSpout {
 
     private transient SpoutOutputCollector collector;
 
-    private Map<Long, String> queueMessageMap = new HashMap<Long, String>();
+    private Map<String, Message> ackAwaitMessages = new HashMap<String, Message>();
 
     private Map<String, MessageConsumer> messageConsumers = new HashMap<String, MessageConsumer>();
 
@@ -62,7 +62,7 @@ public class MQTTSpout extends BaseRichSpout {
             if (!tuple.isEmpty()) {
                 collector.emit(tuple);
                 if (configurator.qosLevel() != QoS.AT_MOST_ONCE) {
-                    queueMessageMap.put(12l, message.getQueue());
+                    ackAwaitMessages.put(message.getId(), message);
                 }
             }
         }
@@ -72,9 +72,9 @@ public class MQTTSpout extends BaseRichSpout {
     public void ack(Object msgId) {
         if (msgId instanceof Long) {
             if (configurator.qosLevel() != QoS.AT_MOST_ONCE) {
-                String name =  queueMessageMap.remove(msgId);
-                MessageConsumer consumer = messageConsumers.get(name);
-                consumer.ack(msgId);
+                Message message =  ackAwaitMessages.remove(msgId.toString());
+                MessageConsumer consumer = messageConsumers.get(message.getQueue());
+                consumer.ack(message);
             }
         }
     }
@@ -83,9 +83,9 @@ public class MQTTSpout extends BaseRichSpout {
     public void fail(Object msgId) {
         if (msgId instanceof Long) {
             if (configurator.qosLevel() != QoS.AT_MOST_ONCE) {
-                String name =  queueMessageMap.remove(msgId);
-                MessageConsumer consumer = messageConsumers.get(name);
-                consumer.ack(msgId);
+                Message message =  ackAwaitMessages.remove(msgId.toString());
+                MessageConsumer consumer = messageConsumers.get(message.getQueue());
+                consumer.ack(message);
             }
         }
     }

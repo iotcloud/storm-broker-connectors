@@ -7,6 +7,7 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 import org.slf4j.Logger;
 
 import java.net.URISyntaxException;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 
 public class MessageConsumer {
@@ -92,13 +93,13 @@ public class MessageConsumer {
             }
 
             public void onPublish(UTF8Buffer topic, Buffer payload, Runnable onComplete) {
-                Message message = new Message(payload, topic.toString());
+                final String uuid = UUID.randomUUID().toString();
+                Message message = new Message(uuid, payload, topic.toString(), onComplete);
                 try {
                     messages.put(message);
                 } catch (InterruptedException e) {
                     logger.error("Failed to put the message to queue", e);
                 }
-                onComplete.run();
             }
 
             public void onFailure(Throwable value) {
@@ -137,8 +138,8 @@ public class MessageConsumer {
         });
     }
 
-    public void ack(Object msgId) {
-
+    public void ack(Message msg) {
+        msg.getOnComplete().run();
     }
 
     public void close() {
