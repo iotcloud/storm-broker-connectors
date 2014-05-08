@@ -11,6 +11,7 @@
         <module>storm-rabbitmq</module>
         <module>storm-jms</module>
         <module>storm-mqtt</module>
+        <module>examples</module>
         <!--<module>storm-jms</module>-->
     </modules>
 
