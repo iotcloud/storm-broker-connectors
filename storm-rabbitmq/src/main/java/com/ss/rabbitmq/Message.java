@@ -4,12 +4,12 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
 
 public class Message {
-    String consumerTag;
-    Envelope envelope;
-    AMQP.BasicProperties properties;
-    byte[] body;
+    private String consumerTag;
+    private Envelope envelope;
+    private AMQP.BasicProperties properties;
+    private byte[] body;
 
-    String queue;
+    private String queue;
 
     public Message(String queue, String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
         this.consumerTag = consumerTag;

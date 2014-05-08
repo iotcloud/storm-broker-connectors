@@ -1,5 +1,7 @@
 package com.ss.mqtt;
 
-public interface MessageBuilder {
+import java.util.List;
 
+public interface MessageBuilder {
+    List<Object> deSerialize(Message message);
 }
