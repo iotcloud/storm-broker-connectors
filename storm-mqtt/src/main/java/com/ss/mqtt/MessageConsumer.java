@@ -22,11 +22,18 @@ public class MessageConsumer {
 
     private boolean trace = false;
 
+    private QoS qoS;
+
     public MessageConsumer(Logger logger, String url, BlockingQueue<Message> messages, String queueName) {
+        this(logger, url, messages, queueName, QoS.AT_MOST_ONCE);
+    }
+
+    public MessageConsumer(Logger logger, String url, BlockingQueue<Message> messages, String queueName, QoS qoS) {
         this.logger = logger;
         this.url = url;
         this.messages = messages;
         this.queueName = queueName;
+        this.qoS = qoS;
     }
 
     public void setTrace(boolean trace) {
@@ -112,7 +119,7 @@ public class MessageConsumer {
             // Once we connect..
             public void onSuccess(Void v) {
                 // Subscribe to a topic
-                Topic[] topics = {new Topic(queueName, QoS.AT_LEAST_ONCE)};
+                Topic[] topics = {new Topic(queueName, qoS)};
                 connection.subscribe(topics, new Callback<byte[]>() {
                     public void onSuccess(byte[] qoses) {
                         // The result of the subcribe request.
@@ -128,6 +135,10 @@ public class MessageConsumer {
                 });
             }
         });
+    }
+
+    public void ack(Object msgId) {
+
     }
 
     public void close() {

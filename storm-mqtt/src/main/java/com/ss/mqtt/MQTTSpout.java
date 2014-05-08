@@ -4,6 +4,7 @@ import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
+import org.fusesource.mqtt.client.QoS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,9 +59,41 @@ public class MQTTSpout extends BaseRichSpout {
             List<Object> tuple = extractTuple(message);
             if (!tuple.isEmpty()) {
                 collector.emit(tuple);
-                queueMessageMap.put(12l, message.getQueue());
+                if (configurator.qosLevel() != QoS.AT_MOST_ONCE) {
+                    queueMessageMap.put(12l, message.getQueue());
+                }
             }
         }
+    }
+
+    @Override
+    public void ack(Object msgId) {
+        if (msgId instanceof Long) {
+            if (configurator.qosLevel() != QoS.AT_MOST_ONCE) {
+                String name =  queueMessageMap.remove(msgId);
+                MessageConsumer consumer = messageConsumers.get(name);
+                consumer.ack(msgId);
+            }
+        }
+    }
+
+    @Override
+    public void fail(Object msgId) {
+        if (msgId instanceof Long) {
+            if (configurator.qosLevel() != QoS.AT_MOST_ONCE) {
+                String name =  queueMessageMap.remove(msgId);
+                MessageConsumer consumer = messageConsumers.get(name);
+                consumer.ack(msgId);
+            }
+        }
+    }
+
+    @Override
+    public void close() {
+        for (MessageConsumer consumer : messageConsumers.values()) {
+            consumer.close();
+        }
+        super.close();
     }
 
     public List<Object> extractTuple(Message delivery) {
@@ -76,10 +109,6 @@ public class MQTTSpout extends BaseRichSpout {
             logger.warn("Deserialization error for msg", e);
             collector.reportError(e);
         }
-//        MessageConsumer consumer = messageConsumers.get(delivery.getQueue());
-//        if (consumer != null) {
-//            consumer.deadLetter(deliveryTag);
-//        }
 
         return Collections.emptyList();
     }
