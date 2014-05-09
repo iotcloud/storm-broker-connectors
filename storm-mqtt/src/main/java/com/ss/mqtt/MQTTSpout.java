@@ -34,7 +34,11 @@ public class MQTTSpout extends BaseRichSpout {
 
     public MQTTSpout(MQTTConfigurator configurator, Logger logger) {
         this.configurator = configurator;
-        this.logger = logger;
+        if (logger != null) {
+            this.logger = logger;
+        } else {
+            this.logger = LoggerFactory.getLogger(MQTTSpout.class);
+        }
         this.messages = new ArrayBlockingQueue<Message>(configurator.queueSize());
     }
 
