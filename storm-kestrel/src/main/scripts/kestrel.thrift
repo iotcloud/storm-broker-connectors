@@ -1,4 +1,4 @@
-namespace java net.lag.kestrel.thrift
+namespace java com.ss.kestrel.thrift
 
 struct Item {
   /* the actual data */

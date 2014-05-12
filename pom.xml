@@ -27,6 +27,7 @@
         <curator.version>2.4.0</curator.version>
         <zookeeper.version>3.4.5</zookeeper.version>
         <mqtt.version>1.7</mqtt.version>
+        <libthrift.version>0.9.1</libthrift.version>
     </properties>
 
     <repositories>
@@ -126,6 +127,13 @@
                 <artifactId>mqtt-client</artifactId>
                 <version>${mqtt.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>${libthrift.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>
