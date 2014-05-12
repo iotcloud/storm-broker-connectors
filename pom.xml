@@ -12,6 +12,7 @@
         <module>storm-jms</module>
         <module>storm-mqtt</module>
         <module>examples</module>
+        <module>storm-kestrel</module>
         <!--<module>storm-jms</module>-->
     </modules>
 
