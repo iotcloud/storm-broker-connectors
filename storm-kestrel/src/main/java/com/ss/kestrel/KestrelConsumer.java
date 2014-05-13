@@ -34,14 +34,6 @@ public class KestrelConsumer {
         this.queues = queues;
         this.host = host;
         this.port = port;
-
-        try {
-            client = new KestrelThriftClient(host, port);
-        } catch (TException e) {
-            String s = "Error occurred while creating the kestrel client";
-            this.logger.error(s, e);
-            throw new RuntimeException(s);
-        }
     }
 
     public void setTimeoutMillis(int timeoutMillis) {
@@ -64,13 +56,26 @@ public class KestrelConsumer {
 
     }
 
+    private KestrelThriftClient getValidClient() throws TException {
+        if (client == null) {
+            client = new KestrelThriftClient(host, port);
+        }
+        return client;
+    }
+
+    private void closeClient() {
+        if (client != null) {
+            client.close();
+        }
+    }
+
     private class Worker implements Runnable {
         @Override
         public void run() {
             while (run) {
                 for (String q : queues) {
                     try {
-                        List<Item> items = client.get(q, MAX_ITEMS, 0, timeoutMillis);
+                        List<Item> items = getValidClient().get(q, MAX_ITEMS, 0, timeoutMillis);
                         if (items != null) {
                             for (Item item :items) {
                                 KestrelMessage m = new KestrelMessage(item.get_data(), item.get_id(), new Destination(host, port, q));
@@ -78,7 +83,7 @@ public class KestrelConsumer {
                             }
                         }
                     } catch (TException e) {
-
+                        closeClient();
                     } catch (InterruptedException e) {
 
                     }
