@@ -38,6 +38,10 @@ public class KestrelConsumer {
         this.destination = destination;
     }
 
+    public KestrelConsumer(Destination destination, BlockingQueue<KestrelMessage> messages) {
+        this(null, destination, messages);
+    }
+
     public void setTimeoutMillis(int timeoutMillis) {
         this.timeoutMillis = timeoutMillis;
     }
