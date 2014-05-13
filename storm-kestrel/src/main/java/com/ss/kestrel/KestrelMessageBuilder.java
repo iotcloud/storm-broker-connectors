@@ -1,4 +1,7 @@
 package com.ss.kestrel;
 
-public class KestrelMessageBuilder {
+import java.util.List;
+
+public interface KestrelMessageBuilder {
+    List<Object> deSerialize(KestrelMessage message);
 }
