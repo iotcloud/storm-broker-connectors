@@ -3,11 +3,11 @@ package com.ss.kestrel;
 import java.nio.ByteBuffer;
 
 public class KestrelMessage {
-    private ByteBuffer data; // required
+    private byte [] data; // required
     private long id; // required
     private Destination destination;
 
-    public KestrelMessage(ByteBuffer data, long id, Destination destination) {
+    public KestrelMessage(byte [] data, long id, Destination destination) {
         this.data = data;
         this.id = id;
         this.destination = destination;
@@ -17,7 +17,7 @@ public class KestrelMessage {
         return destination;
     }
 
-    public ByteBuffer getData() {
+    public byte [] getData() {
         return data;
     }
 
