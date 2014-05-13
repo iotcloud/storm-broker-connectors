@@ -1,16 +1,19 @@
 package com.ss.kestrel;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Destination {
     private String host;
 
     private int port;
 
-    private String queue;
+    private List<String> queue = new ArrayList<String>();
 
-    public Destination(String host, int port, String queue) {
+    public Destination(String host, int port, List<String> queue) {
         this.host = host;
         this.port = port;
-        this.queue = queue;
+        this.queue.addAll(queue);
     }
 
     public String getHost() {
@@ -21,7 +24,7 @@ public class Destination {
         return port;
     }
 
-    public String getQueue() {
+    public List<String> getQueues() {
         return queue;
     }
 }

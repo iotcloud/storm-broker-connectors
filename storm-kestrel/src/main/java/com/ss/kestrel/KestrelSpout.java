@@ -38,7 +38,7 @@ public class KestrelSpout extends BaseRichSpout {
 
         try {
             for (Destination e : configurator.destinations()) {
-                KestrelConsumer consumer = new KestrelConsumer(null, e.getHost(), e.getPort(), null, messages);
+                KestrelConsumer consumer = new KestrelConsumer(null, e, messages);
                 consumer.open();
 
                 messageConsumers.put(e, consumer);
