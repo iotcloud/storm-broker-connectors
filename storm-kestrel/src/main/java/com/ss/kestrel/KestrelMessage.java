@@ -1,7 +1,5 @@
 package com.ss.kestrel;
 
-import java.nio.ByteBuffer;
-
 public class KestrelMessage {
     private byte [] data; // required
     private long id; // required
