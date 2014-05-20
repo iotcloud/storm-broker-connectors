@@ -12,8 +12,8 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.ss.mqtt.MQTTConfigurator;
+import com.ss.mqtt.MQTTMessage;
 import com.ss.mqtt.MQTTSpout;
-import com.ss.mqtt.Message;
 import com.ss.mqtt.MessageBuilder;
 import org.fusesource.mqtt.client.QoS;
 import org.slf4j.Logger;
@@ -47,7 +47,12 @@ public class MQTTTopology {
 
     private static class TimeStampMessageBuilder implements MessageBuilder {
         @Override
-        public List<Object> deSerialize(Message message) {
+        public List<Object> deSerialize(MQTTMessage message) {
+            return null;
+        }
+
+        @Override
+        public MQTTMessage serialize(Tuple tuple) {
             return null;
         }
     }

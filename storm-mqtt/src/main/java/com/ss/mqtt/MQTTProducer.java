@@ -1,23 +1,17 @@
 package com.ss.mqtt;
 
-import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.client.*;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.slf4j.Logger;
 
 import java.net.URISyntaxException;
-import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
 
-public class MessageConsumer {
+public class MQTTProducer {
     private Logger logger;
 
     private CallbackConnection connection;
 
     private String url;
-
-    private BlockingQueue<Message> messages;
 
     private String queueName;
 
@@ -25,14 +19,13 @@ public class MessageConsumer {
 
     private QoS qoS;
 
-    public MessageConsumer(Logger logger, String url, BlockingQueue<Message> messages, String queueName) {
-        this(logger, url, messages, queueName, QoS.AT_MOST_ONCE);
+    public MQTTProducer(Logger logger, String url, String queueName) {
+        this(logger, url, queueName, QoS.AT_MOST_ONCE);
     }
 
-    public MessageConsumer(Logger logger, String url, BlockingQueue<Message> messages, String queueName, QoS qoS) {
+    public MQTTProducer(Logger logger, String url, String queueName, QoS qoS) {
         this.logger = logger;
         this.url = url;
-        this.messages = messages;
         this.queueName = queueName;
         this.qoS = qoS;
     }
@@ -81,33 +74,6 @@ public class MessageConsumer {
         }
 
         connection = mqtt.callbackConnection();
-        // Start add a listener to process subscription messages, and start the
-        // resume the connection so it starts receiving messages from the socket.
-        connection.listener(new Listener() {
-            public void onConnected() {
-                logger.debug("connected");
-            }
-
-            public void onDisconnected() {
-                logger.debug("disconnected");
-            }
-
-            public void onPublish(UTF8Buffer topic, Buffer payload, Runnable onComplete) {
-                final String uuid = UUID.randomUUID().toString();
-                Message message = new Message(uuid, payload, topic.toString(), onComplete);
-                try {
-                    messages.put(message);
-                } catch (InterruptedException e) {
-                    logger.error("Failed to put the message to queue", e);
-                }
-            }
-
-            public void onFailure(Throwable value) {
-                logger.warn("Connection failure: {}", value);
-                connection.disconnect(null);
-                state = State.DISCONNECTED;
-            }
-        });
 
         connection.connect(new Callback<Void>() {
             public void onFailure(Throwable value) {
@@ -138,7 +104,15 @@ public class MessageConsumer {
         });
     }
 
-    public void ack(Message msg) {
+    public void send(byte []message) {
+        if (connection != null && state == State.TOPIC_CONNECTED) {
+            connection.publish(queueName, message, qoS, false, null);
+        } else {
+            logger.warn("Trying to send messages on a closed connection");
+        }
+    }
+
+    public void ack(MQTTMessage msg) {
         msg.getOnComplete().run();
     }
 

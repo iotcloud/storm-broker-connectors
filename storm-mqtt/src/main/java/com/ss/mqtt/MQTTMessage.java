@@ -2,7 +2,7 @@ package com.ss.mqtt;
 
 import org.fusesource.hawtbuf.Buffer;
 
-public class Message {
+public class MQTTMessage {
     private Buffer body;
 
     private String queue;
@@ -11,7 +11,7 @@ public class Message {
 
     private Runnable onComplete;
 
-    public Message(String id, Buffer body, String queue, Runnable onComplete) {
+    public MQTTMessage(String id, Buffer body, String queue, Runnable onComplete) {
         this.body = body;
         this.queue = queue;
         this.onComplete = onComplete;
