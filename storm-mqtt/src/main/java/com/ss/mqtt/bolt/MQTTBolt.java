@@ -21,7 +21,7 @@ public class MQTTBolt extends BaseRichBolt {
 
     private transient OutputCollector collector;
 
-    private Map<String, MQTTProducer> messageConsumers = new HashMap<String, MQTTProducer>();
+    private Map<String, MQTTProducer> messageProducers = new HashMap<String, MQTTProducer>();
 
     public MQTTBolt(Logger logger, MQTTConfigurator configurator) {
         this.logger = logger;
@@ -39,7 +39,7 @@ public class MQTTBolt extends BaseRichBolt {
         for (String queue : configurator.getQueueName()) {
             MQTTProducer consumer = new MQTTProducer(logger, configurator.getURL(), queue);
             consumer.open();
-            messageConsumers.put(queue, consumer);
+            messageProducers.put(queue, consumer);
         }
     }
 
@@ -47,7 +47,7 @@ public class MQTTBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         MQTTMessage message = configurator.getMessageBuilder().serialize(tuple);
 
-        MQTTProducer producer = messageConsumers.get(message.getQueue());
+        MQTTProducer producer = messageProducers.get(message.getQueue());
         try {
             if (producer != null) {
                 producer.send(message.getBody().toByteArray());
@@ -60,5 +60,14 @@ public class MQTTBolt extends BaseRichBolt {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         this.configurator.declareOutputFields(outputFieldsDeclarer);
+    }
+
+    @Override
+    public void cleanup() {
+        super.cleanup();
+
+        for (MQTTProducer consumer : messageProducers.values()) {
+            consumer.close();
+        }
     }
 }
