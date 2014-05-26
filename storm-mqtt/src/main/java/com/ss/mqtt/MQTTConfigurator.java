@@ -18,4 +18,6 @@ public interface MQTTConfigurator extends Serializable {
     QoS qosLevel();
 
     int queueSize();
+
+    DestinationSelector getDestinationSelector();
 }

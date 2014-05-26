@@ -19,6 +19,10 @@ public class MQTTProducer {
 
     private QoS qoS;
 
+    private String host;
+
+    private int port;
+
     public MQTTProducer(Logger logger, String url, String queueName) {
         this(logger, url, queueName, QoS.AT_MOST_ONCE);
     }
@@ -28,6 +32,13 @@ public class MQTTProducer {
         this.url = url;
         this.queueName = queueName;
         this.qoS = qoS;
+
+        if (url.contains(":")) {
+            this.host = url.substring(0, url.indexOf(":"));
+            this.port = Integer.parseInt(url.substring(url.indexOf(":") + 1));
+        } else {
+            this.host = url;
+        }
     }
 
     public void setTrace(boolean trace) {
@@ -47,7 +58,11 @@ public class MQTTProducer {
         MQTT mqtt = new MQTT();
 
         try {
-            mqtt.setHost(url);
+            if (port == -1) {
+                mqtt.setHost(url);
+            } else {
+                mqtt.setHost(host, port);
+            }
         } catch (URISyntaxException e) {
             String msg = "Invalid URL for the MQTT Broker";
             logger.error(msg, e);
@@ -85,27 +100,28 @@ public class MQTTProducer {
 
             // Once we connect..
             public void onSuccess(Void v) {
+                state = State.CONNECTED;
                 // Subscribe to a topic
-                Topic[] topics = {new Topic(queueName, qoS)};
-                connection.subscribe(topics, new Callback<byte[]>() {
-                    public void onSuccess(byte[] qoses) {
-                        // The result of the subcribe request.
-                        logger.debug("Subscribed to the topic {}", queueName);
-                        state = State.TOPIC_CONNECTED;
-                    }
-
-                    public void onFailure(Throwable value) {
-                        logger.error("Failed to subscribe to topic", value);
-                        connection.disconnect(null);
-                        state = State.DISCONNECTED;
-                    }
-                });
+//                Topic[] topics = {new Topic(queueName, qoS)};
+//                connection.subscribe(topics, new Callback<byte[]>() {
+//                    public void onSuccess(byte[] qoses) {
+//                        // The result of the subcribe request.
+//                        logger.debug("Subscribed to the topic {}", queueName);
+//                        state = State.TOPIC_CONNECTED;
+//                    }
+//
+//                    public void onFailure(Throwable value) {
+//                        logger.error("Failed to subscribe to topic", value);
+//                        connection.disconnect(null);
+//                        state = State.DISCONNECTED;
+//                    }
+//                });
             }
         });
     }
 
     public void send(byte []message) {
-        if (connection != null && state == State.TOPIC_CONNECTED) {
+        if (connection != null && state == State.CONNECTED) {
             connection.publish(queueName, message, qoS, false, null);
         } else {
             logger.warn("Trying to send messages on a closed connection");

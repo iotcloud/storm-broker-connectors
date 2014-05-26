@@ -5,6 +5,7 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
+import com.ss.mqtt.DestinationSelector;
 import com.ss.mqtt.MQTTConfigurator;
 import com.ss.mqtt.MQTTMessage;
 import com.ss.mqtt.MQTTProducer;
@@ -47,10 +48,15 @@ public class MQTTBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         MQTTMessage message = configurator.getMessageBuilder().serialize(tuple);
 
-        MQTTProducer producer = messageProducers.get(message.getQueue());
+        String destination = configurator.getDestinationSelector().select(message);
         try {
-            if (producer != null) {
-                producer.send(message.getBody().toByteArray());
+            if (destination != null) {
+                MQTTProducer producer = messageProducers.get(destination);
+
+                if (producer != null) {
+                    producer.send(message.getBody().toByteArray());
+                }
+
             }
         } finally {
             collector.ack(tuple);

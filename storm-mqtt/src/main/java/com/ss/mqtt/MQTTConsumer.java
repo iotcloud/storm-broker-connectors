@@ -25,6 +25,10 @@ public class MQTTConsumer {
 
     private QoS qoS;
 
+    private String host;
+
+    private int port = -1;
+
     public MQTTConsumer(Logger logger, String url, BlockingQueue<MQTTMessage> messages, String queueName) {
         this(logger, url, messages, queueName, QoS.AT_MOST_ONCE);
     }
@@ -35,6 +39,13 @@ public class MQTTConsumer {
         this.messages = messages;
         this.queueName = queueName;
         this.qoS = qoS;
+
+        if (url.contains(":")) {
+            this.host = url.substring(0, url.indexOf(":"));
+            this.port = Integer.parseInt(url.substring(url.indexOf(":") + 1));
+        } else {
+            this.host = url;
+        }
     }
 
     public void setTrace(boolean trace) {
@@ -54,7 +65,11 @@ public class MQTTConsumer {
         MQTT mqtt = new MQTT();
 
         try {
-            mqtt.setHost(url);
+            if (port == -1) {
+                mqtt.setHost(url);
+            } else {
+                mqtt.setHost(host, port);
+            }
         } catch (URISyntaxException e) {
             String msg = "Invalid URL for the MQTT Broker";
             logger.error(msg, e);
@@ -119,6 +134,7 @@ public class MQTTConsumer {
 
             // Once we connect..
             public void onSuccess(Void v) {
+                state = State.CONNECTED;
                 // Subscribe to a topic
                 Topic[] topics = {new Topic(queueName, qoS)};
                 connection.subscribe(topics, new Callback<byte[]>() {

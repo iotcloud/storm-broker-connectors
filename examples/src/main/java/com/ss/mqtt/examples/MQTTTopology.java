@@ -11,10 +11,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import com.ss.mqtt.MQTTConfigurator;
-import com.ss.mqtt.MQTTMessage;
-import com.ss.mqtt.MQTTSpout;
-import com.ss.mqtt.MessageBuilder;
+import com.ss.mqtt.*;
 import org.fusesource.mqtt.client.QoS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +87,11 @@ public class MQTTTopology {
         @Override
         public int queueSize() {
             return 1024;
+        }
+
+        @Override
+        public DestinationSelector getDestinationSelector() {
+            return null;
         }
     }
 
