@@ -48,7 +48,7 @@ public class MQTTBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         MQTTMessage message = configurator.getMessageBuilder().serialize(tuple);
 
-        String destination = configurator.getDestinationSelector().select(message);
+        String destination = configurator.getDestinationSelector().select(tuple);
         try {
             if (destination != null) {
                 MQTTProducer producer = messageProducers.get(destination);

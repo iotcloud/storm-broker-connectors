@@ -35,4 +35,6 @@ public interface JMSConfigurator extends Serializable {
     void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer);
 
     int queueSize();
+
+    public JMSDestinationSelector getDestinationSelector();
 }

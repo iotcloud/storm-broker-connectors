@@ -1,5 +1,7 @@
 package com.ss.mqtt;
 
+import backtype.storm.tuple.Tuple;
+
 public interface DestinationSelector {
-    String select(MQTTMessage message);
+    String select(Tuple message);
 }

@@ -26,7 +26,7 @@
         <log4j.version>1.2.17</log4j.version>
         <curator.version>2.4.0</curator.version>
         <zookeeper.version>3.4.5</zookeeper.version>
-        <mqtt.version>1.7</mqtt.version>
+        <mqtt.version>1.11-SNAPSHOT</mqtt.version>
         <libthrift.version>0.9.1</libthrift.version>
     </properties>
 

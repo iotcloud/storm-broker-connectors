@@ -57,6 +57,9 @@ public class JMSBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         String queue = configurator.getMessageBuilder().getQueue(tuple);
+
+
+
         JMSProducer producer = messageProducers.get(queue);
 
         Message message = (Message) configurator.getMessageBuilder().serialize(tuple, producer.getSession());
