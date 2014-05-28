@@ -40,6 +40,7 @@ public class JMSConsumer {
 
     public void open() {
         try {
+            logger.info("Opening JMS Consumer for destination {}", queue);
             this.connection = cf.createConnection();
             this.session = connection.createSession(false, this.ackMode);
             this.connection.start();
@@ -55,7 +56,12 @@ public class JMSConsumer {
                     }
                 }
             });
+            logger.info("Finished Opening JMS Consumer for destination {}!", queue);
         } catch (JMSException e) {
+            String s = "Failed to create the JMS Connection";
+            logger.error(s, e);
+            throw new RuntimeException(s, e);
+        } catch (Throwable e) {
             String s = "Failed to create the JMS Connection";
             logger.error(s, e);
             throw new RuntimeException(s, e);

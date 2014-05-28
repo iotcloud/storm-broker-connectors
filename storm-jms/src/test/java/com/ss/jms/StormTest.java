@@ -40,7 +40,6 @@ public class StormTest {
     }
 
     private static class TimeStampMessageBuilder implements MessageBuilder {
-        @Override
         public List<Object> deSerialize(Message envelope) {
             Long timeStamp = null;
             try {
@@ -54,6 +53,16 @@ public class StormTest {
             } catch (JMSException e) {
                 e.printStackTrace();
             }
+            return null;
+        }
+
+        @Override
+        public List<Object> deSerialize(JMSMessage message) {
+            return null;
+        }
+
+        @Override
+        public JMSMessage serialize(Tuple tuple, Object context) {
             return null;
         }
     }
@@ -120,6 +129,11 @@ public class StormTest {
         @Override
         public int queueSize() {
             return 1024;
+        }
+
+        @Override
+        public JMSDestinationSelector getDestinationSelector() {
+            return null;
         }
     }
 

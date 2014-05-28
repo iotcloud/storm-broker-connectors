@@ -60,9 +60,9 @@ public class JMSBolt extends BaseRichBolt {
             String destination = configurator.getDestinationSelector().select(tuple);
             if (destination != null) {
                 JMSProducer producer = messageProducers.get(destination);
-                Message message = (Message) configurator.getMessageBuilder().serialize(tuple, producer.getSession());
+                JMSMessage message = (JMSMessage) configurator.getMessageBuilder().serialize(tuple, producer.getSession());
                 if (producer != null) {
-                    producer.send(message);
+                    producer.send(message.getMessage());
                 }
             } else {
                 logger.warn("The DestinationSelector should give a valid destination");
