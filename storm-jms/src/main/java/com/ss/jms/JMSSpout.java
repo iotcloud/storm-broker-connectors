@@ -106,9 +106,7 @@ public class JMSSpout extends BaseRichSpout {
     public void nextTuple() {
         JMSMessage message;
         while ((message = messages.poll()) != null) {
-//        message = messages.poll();
-//        if (message != null) {
-            List<Object> tuple = configurator.getMessageBuilder().deSerialize(message.getMessage());
+            List<Object> tuple = configurator.getMessageBuilder().deSerialize(message);
             if (!tuple.isEmpty()) {
                 try {
                     if (this.configurator.ackMode() != Session.AUTO_ACKNOWLEDGE

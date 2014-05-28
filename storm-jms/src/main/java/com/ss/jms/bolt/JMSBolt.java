@@ -56,16 +56,16 @@ public class JMSBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        String queue = configurator.getMessageBuilder().getQueue(tuple);
-
-
-
-        JMSProducer producer = messageProducers.get(queue);
-
-        Message message = (Message) configurator.getMessageBuilder().serialize(tuple, producer.getSession());
         try {
-            if (producer != null) {
-                producer.send(message);
+            String destination = configurator.getDestinationSelector().select(tuple);
+            if (destination != null) {
+                JMSProducer producer = messageProducers.get(destination);
+                Message message = (Message) configurator.getMessageBuilder().serialize(tuple, producer.getSession());
+                if (producer != null) {
+                    producer.send(message);
+                }
+            } else {
+                logger.warn("The DestinationSelector should give a valid destination");
             }
         } finally {
             collector.ack(tuple);
