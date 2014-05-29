@@ -73,8 +73,12 @@ public class RabbitMQSpout extends BaseRichSpout {
         if (msgId instanceof Long) {
             if (!configurator.isAutoAcking()) {
                 String name =  queueMessageMap.remove(msgId);
-                MessageConsumer consumer = messageConsumers.get(name);
-                consumer.ackMessage((Long) msgId);
+                if (name != null) {
+                    MessageConsumer consumer = messageConsumers.get(name);
+                    if (consumer != null) {
+                        consumer.ackMessage((Long) msgId);
+                    }
+                }
             }
         }
     }
