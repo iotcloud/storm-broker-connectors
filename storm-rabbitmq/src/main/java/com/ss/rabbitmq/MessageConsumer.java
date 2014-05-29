@@ -90,6 +90,7 @@ public class MessageConsumer {
                 channel.basicQos(configurator.getPrefetchCount());
             }
 
+            channel.queueDeclare(this.queueName, true, false, false, null);
             consumer = new QueueingConsumer(channel);
             consumerTag = channel.basicConsume(queueName, configurator.isAutoAcking(), new DefaultConsumer(channel) {
                 @Override
