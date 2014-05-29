@@ -27,7 +27,7 @@ public class MessageConsumer {
 
     private RabbitMQConfigurator configurator;
 
-    private String queueName;
+    private RabbitMQDestination queueName;
 
     private State state = State.INIT;
 
@@ -35,7 +35,7 @@ public class MessageConsumer {
 
     private BlockingQueue<RabbitMQMessage> messages;
 
-    public MessageConsumer(BlockingQueue<RabbitMQMessage> messages, String queueName,
+    public MessageConsumer(BlockingQueue<RabbitMQMessage> messages, RabbitMQDestination queueName,
                            RabbitMQConfigurator configurator,
                            ErrorReporter reporter, Logger logger) {
         this.queueName = queueName;
@@ -90,12 +90,16 @@ public class MessageConsumer {
                 channel.basicQos(configurator.getPrefetchCount());
             }
 
-            channel.queueDeclare(this.queueName, true, false, false, null);
+            if (queueName.getRoutingKey() != null && queueName.getExchange() != null) {
+                channel.exchangeDeclare(queueName.getExchange(), "direct", false);
+                channel.queueDeclare(this.queueName.getDestination(), true, false, false, null);
+                channel.queueBind(queueName.getDestination(), queueName.getExchange(), queueName.getRoutingKey());
+            }
             consumer = new QueueingConsumer(channel);
-            consumerTag = channel.basicConsume(queueName, configurator.isAutoAcking(), new DefaultConsumer(channel) {
+            consumerTag = channel.basicConsume(queueName.getDestination(), configurator.isAutoAcking(), new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                    RabbitMQMessage message = new RabbitMQMessage(queueName, consumerTag, envelope, properties, body);
+                    RabbitMQMessage message = new RabbitMQMessage(queueName.getDestination(), consumerTag, envelope, properties, body);
                     try {
                         messages.put(message);
                     } catch (InterruptedException e) {

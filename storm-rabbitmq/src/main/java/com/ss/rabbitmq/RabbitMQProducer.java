@@ -87,7 +87,7 @@ public class RabbitMQProducer {
             }
 
             channel.exchangeDeclare(destination.getExchange(), "direct", false);
-            channel.queueDeclare(destination.getDestination(), false, false, false, null);
+            channel.queueDeclare(destination.getDestination(), true, false, false, null);
             channel.queueBind(destination.getDestination(), destination.getExchange(), destination.getRoutingKey());
 
             state = State.CONNECTED;
