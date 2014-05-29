@@ -17,11 +17,13 @@ public interface RabbitMQConfigurator extends Serializable {
 
     String getConsumerTag();
 
-    List<String> getQueueName();
+    List<RabbitMQDestination> getQueueName();
 
     MessageBuilder getMessageBuilder();
 
     void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer);
 
     int queueSize();
+
+    RabbitMQDestinationSelector getDestinationSelector();
 }

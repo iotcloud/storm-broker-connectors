@@ -2,11 +2,11 @@ package com.ss.rabbitmq;
 
 import com.rabbitmq.client.*;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
 
-public class MessageConsumer {
+public class RabbitMQProducer {
     public enum State {
         INIT,
         CONNECTED,
@@ -27,22 +27,18 @@ public class MessageConsumer {
 
     private RabbitMQConfigurator configurator;
 
-    private String queueName;
-
     private State state = State.INIT;
 
-    private Logger logger;
+    private Logger logger = LoggerFactory.getLogger(RabbitMQProducer.class);
 
-    private BlockingQueue<RabbitMQMessage> messages;
+    private RabbitMQDestination destination;
 
-    public MessageConsumer(BlockingQueue<RabbitMQMessage> messages, String queueName,
-                           RabbitMQConfigurator configurator,
-                           ErrorReporter reporter, Logger logger) {
-        this.queueName = queueName;
+    public RabbitMQProducer(RabbitMQConfigurator configurator,
+                           ErrorReporter reporter,
+                           RabbitMQDestination destination) {
         this.configurator = configurator;
         this.reporter = reporter;
-        this.logger = logger;
-        this.messages = messages;
+        this.destination = destination;
     }
 
     private void reset() {
@@ -51,12 +47,12 @@ public class MessageConsumer {
 
     private void reInitIfNecessary() {
         if (consumerTag == null || consumer == null) {
-            closeConnection();
-            openConnection();
+            close();
+            open();
         }
     }
 
-    public void closeConnection() {
+    public void close() {
         try {
             if (channel != null && channel.isOpen()) {
                 if (consumerTag != null) {
@@ -80,7 +76,7 @@ public class MessageConsumer {
         state = State.CLOSED;
     }
 
-    public void openConnection() {
+    public void open() {
         try {
             connection = createConnection();
             channel = connection.createChannel();
@@ -90,18 +86,9 @@ public class MessageConsumer {
                 channel.basicQos(configurator.getPrefetchCount());
             }
 
-            consumer = new QueueingConsumer(channel);
-            consumerTag = channel.basicConsume(queueName, configurator.isAutoAcking(), new DefaultConsumer(channel) {
-                @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                    RabbitMQMessage message = new RabbitMQMessage(queueName, consumerTag, envelope, properties, body);
-                    try {
-                        messages.put(message);
-                    } catch (InterruptedException e) {
-                        reporter.reportError(e);
-                    }
-                }
-            });
+            channel.exchangeDeclare(destination.getExchange(), "direct", false);
+            channel.queueDeclare(destination.getDestination(), false, false, false, null);
+            channel.queueBind(destination.getDestination(), destination.getExchange(), destination.getRoutingKey());
 
             state = State.CONNECTED;
         } catch (Exception e) {
@@ -109,6 +96,16 @@ public class MessageConsumer {
             reset();
             logger.error("could not open listener on queue " + configurator.getQueueName());
             reporter.reportError(e);
+        }
+    }
+
+    public void send(RabbitMQMessage message) {
+        try {
+            channel.basicPublish(destination.getExchange(), destination.getRoutingKey(),
+                    message.getProperties(),
+                    message.getBody());
+        } catch (IOException e) {
+            logger.error("Failed to ");
         }
     }
 

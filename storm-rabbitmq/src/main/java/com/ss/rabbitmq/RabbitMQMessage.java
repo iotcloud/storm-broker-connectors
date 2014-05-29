@@ -3,7 +3,7 @@ package com.ss.rabbitmq;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
 
-public class Message {
+public class RabbitMQMessage {
     private String consumerTag;
     private Envelope envelope;
     private AMQP.BasicProperties properties;
@@ -11,7 +11,7 @@ public class Message {
 
     private String queue;
 
-    public Message(String queue, String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
+    public RabbitMQMessage(String queue, String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
         this.consumerTag = consumerTag;
         this.envelope = envelope;
         this.properties = properties;

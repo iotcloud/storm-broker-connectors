@@ -61,6 +61,11 @@ public class StormTest {
             tuples.add(new Long((currentTime - timeStamp)));
             return tuples;
         }
+
+        @Override
+        public RabbitMQMessage serialize(Tuple message) {
+            return null;
+        }
     }
 
     private static class Configurator implements RabbitMQConfigurator {
@@ -94,8 +99,8 @@ public class StormTest {
         }
 
         @Override
-        public List<String> getQueueName() {
-            return new ArrayList<String>(Arrays.asList(queueName));
+        public List<RabbitMQDestination> getQueueName() {
+            return new ArrayList<RabbitMQDestination>(Arrays.asList(new RabbitMQDestination(queueName)));
         }
 
         @Override
@@ -111,6 +116,11 @@ public class StormTest {
         @Override
         public int queueSize() {
             return 1024;
+        }
+
+        @Override
+        public RabbitMQDestinationSelector getDestinationSelector() {
+            return null;
         }
     }
 

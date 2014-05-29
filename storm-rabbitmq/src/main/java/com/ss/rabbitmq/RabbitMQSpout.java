@@ -24,7 +24,7 @@ public class RabbitMQSpout extends BaseRichSpout {
 
     private Map<String, MessageConsumer> messageConsumers = new HashMap<String, MessageConsumer>();
 
-    private BlockingQueue<Message> messages;
+    private BlockingQueue<RabbitMQMessage> messages;
 
     public RabbitMQSpout(RabbitMQConfigurator configurator, ErrorReporter reporter) {
         this(configurator, reporter, LoggerFactory.getLogger(RabbitMQSpout.class));
@@ -34,7 +34,7 @@ public class RabbitMQSpout extends BaseRichSpout {
         this.configurator = configurator;
         this.reporter = reporter;
         this.logger = logger;
-        this.messages = new ArrayBlockingQueue<Message>(configurator.queueSize());
+        this.messages = new ArrayBlockingQueue<RabbitMQMessage>(configurator.queueSize());
     }
 
     @Override
@@ -46,17 +46,17 @@ public class RabbitMQSpout extends BaseRichSpout {
     public void open(Map map, TopologyContext topologyContext, final SpoutOutputCollector spoutOutputCollector) {
         collector = spoutOutputCollector;
 
-        for (String queue : configurator.getQueueName()) {
-            MessageConsumer consumer = new MessageConsumer(messages, queue,
+        for (RabbitMQDestination queue : configurator.getQueueName()) {
+            MessageConsumer consumer = new MessageConsumer(messages, queue.getDestination(),
                     configurator, reporter, logger);
             consumer.openConnection();
-            messageConsumers.put(queue, consumer);
+            messageConsumers.put(queue.getDestination(), consumer);
         }
     }
 
     @Override
     public void nextTuple() {
-        Message message;
+        RabbitMQMessage message;
         while ((message = messages.poll()) != null) {
             List<Object> tuple = extractTuple(message);
             if (!tuple.isEmpty()) {
@@ -98,7 +98,7 @@ public class RabbitMQSpout extends BaseRichSpout {
         super.close();
     }
 
-    public List<Object> extractTuple(Message delivery) {
+    public List<Object> extractTuple(RabbitMQMessage delivery) {
         long deliveryTag = delivery.getEnvelope().getDeliveryTag();
         try {
             List<Object> tuple = configurator.getMessageBuilder().deSerialize(delivery.getConsumerTag(),
