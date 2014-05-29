@@ -90,39 +90,34 @@ public class MQTTProducer {
 
         connection = mqtt.callbackConnection();
 
-        connection.connect(new Callback<Void>() {
-            public void onFailure(Throwable value) {
-                state = State.INIT;
-                String s = "Failed to connect to the broker";
-                logger.error(s, value);
-                throw new RuntimeException(s, value);
-            }
+        connection.getDispatchQueue().execute(new Runnable() {
+            @Override
+            public void run() {
+                connection.connect(new Callback<Void>() {
+                    public void onFailure(Throwable value) {
+                        state = State.INIT;
+                        String s = "Failed to connect to the broker";
+                        logger.error(s, value);
+                        throw new RuntimeException(s, value);
+                    }
 
-            // Once we connect..
-            public void onSuccess(Void v) {
-                state = State.CONNECTED;
-                // Subscribe to a topic
-//                Topic[] topics = {new Topic(queueName, qoS)};
-//                connection.subscribe(topics, new Callback<byte[]>() {
-//                    public void onSuccess(byte[] qoses) {
-//                        // The result of the subcribe request.
-//                        logger.debug("Subscribed to the topic {}", queueName);
-//                        state = State.TOPIC_CONNECTED;
-//                    }
-//
-//                    public void onFailure(Throwable value) {
-//                        logger.error("Failed to subscribe to topic", value);
-//                        connection.disconnect(null);
-//                        state = State.DISCONNECTED;
-//                    }
-//                });
+                    // Once we connect..
+                    public void onSuccess(Void v) {
+                        state = State.CONNECTED;
+                    }
+                });
             }
         });
     }
 
-    public void send(byte []message) {
+    public void send(final byte []message) {
         if (connection != null && state == State.CONNECTED) {
-            connection.publish(queueName, message, qoS, false, null);
+            connection.getDispatchQueue().execute(new Runnable() {
+                @Override
+                public void run() {
+                    connection.publish(queueName, message, qoS, false, null);
+                }
+            });
         } else {
             logger.warn("Trying to send messages on a closed connection");
         }
@@ -134,15 +129,20 @@ public class MQTTProducer {
 
     public void close() {
         if (connection != null && (state == State.CONNECTED || state == State.TOPIC_CONNECTED)) {
-            // To disconnect..
-            connection.disconnect(new Callback<Void>() {
-                public void onSuccess(Void v) {
-                    // called once the connection is disconnected.
-                    state = State.DISCONNECTED;
-                }
-                public void onFailure(Throwable value) {
-                    // Disconnects never fail.
-                    state = State.DISCONNECTED;
+            connection.getDispatchQueue().execute(new Runnable() {
+                @Override
+                public void run() {
+                    // To disconnect..
+                    connection.disconnect(new Callback<Void>() {
+                        public void onSuccess(Void v) {
+                            // called once the connection is disconnected.
+                            state = State.DISCONNECTED;
+                        }
+                        public void onFailure(Throwable value) {
+                            // Disconnects never fail.
+                            state = State.DISCONNECTED;
+                        }
+                    });
                 }
             });
         }
