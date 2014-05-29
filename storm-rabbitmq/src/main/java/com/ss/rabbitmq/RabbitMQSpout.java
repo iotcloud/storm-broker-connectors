@@ -101,8 +101,7 @@ public class RabbitMQSpout extends BaseRichSpout {
     public List<Object> extractTuple(RabbitMQMessage delivery) {
         long deliveryTag = delivery.getEnvelope().getDeliveryTag();
         try {
-            List<Object> tuple = configurator.getMessageBuilder().deSerialize(delivery.getConsumerTag(),
-                    delivery.getEnvelope(), delivery.getProperties(), delivery.getBody());
+            List<Object> tuple = configurator.getMessageBuilder().deSerialize(delivery);
             if (tuple != null && !tuple.isEmpty()) {
                 return tuple;
             }

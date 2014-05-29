@@ -51,8 +51,8 @@ public class StormTest {
 
     private static class TimeStampMessageBuilder implements MessageBuilder {
         @Override
-        public List<Object> deSerialize(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
-            Map<String, Object> headers = properties.getHeaders();
+        public List<Object> deSerialize(RabbitMQMessage message) {
+            Map<String, Object> headers = message.getProperties().getHeaders();
             Long timeStamp = (Long) headers.get("time");
             long currentTime = System.currentTimeMillis();
 
