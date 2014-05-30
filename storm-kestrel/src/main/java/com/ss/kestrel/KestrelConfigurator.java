@@ -10,7 +10,7 @@ public interface KestrelConfigurator {
 
     int ackMode();
 
-    List<Destination> destinations() throws Exception;
+    List<KestrelDestination> destinations() throws Exception;
 
     KestrelMessageBuilder getMessageBuilder();
 

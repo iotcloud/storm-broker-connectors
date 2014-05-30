@@ -3,14 +3,14 @@ package com.ss.kestrel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Destination {
+public class KestrelDestination {
     private String host;
 
     private int port;
 
     private List<String> queue = new ArrayList<String>();
 
-    public Destination(String host, int port, List<String> queue) {
+    public KestrelDestination(String host, int port, List<String> queue) {
         this.host = host;
         this.port = port;
         this.queue.addAll(queue);

@@ -23,7 +23,7 @@ public class KestrelSpout extends BaseRichSpout {
 
     private Map<Long, KestrelMessage> pendingMessages = new ConcurrentHashMap<Long, KestrelMessage>();
 
-    private Map<Destination, KestrelConsumer> messageConsumers = new HashMap<Destination, KestrelConsumer>();
+    private Map<KestrelDestination, KestrelConsumer> messageConsumers = new HashMap<KestrelDestination, KestrelConsumer>();
 
     private SpoutOutputCollector collector;
 
@@ -51,7 +51,7 @@ public class KestrelSpout extends BaseRichSpout {
         this.collector = spoutOutputCollector;
 
         try {
-            for (Destination e : configurator.destinations()) {
+            for (KestrelDestination e : configurator.destinations()) {
                 KestrelConsumer consumer = new KestrelConsumer(null, e, messages);
                 consumer.open();
 
