@@ -1,7 +1,5 @@
 package com.ss.kestrel;
 
-import com.ss.kestrel.thrift.Item;
-import com.ss.kestrel.thrift.Kestrel;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,11 +93,9 @@ public class KestrelProducer {
         }
     }
 
-    public void send(byte []message) {
-        KestrelMessage kestrelMessage = new KestrelMessage(message, 0, null, null);
-
+    public void send(KestrelMessage message) {
         try {
-            messages.put(kestrelMessage);
+            messages.put(message);
         } catch (InterruptedException e) {
             logger.error("Error occurred while trying to put the message");
         }

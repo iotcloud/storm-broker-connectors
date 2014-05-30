@@ -3,6 +3,7 @@ package com.ss.kestrel;
 import backtype.storm.topology.OutputFieldsDeclarer;
 
 import java.util.List;
+import java.util.Map;
 
 public interface KestrelConfigurator {
     public static final int ACK_MESSAGE = 1;
@@ -10,11 +11,19 @@ public interface KestrelConfigurator {
 
     int ackMode();
 
-    List<KestrelDestination> destinations() throws Exception;
+    Map<String, KestrelDestination> destinations();
 
     KestrelMessageBuilder getMessageBuilder();
 
     void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer);
 
     int queueSize();
+
+    long expirationTime();
+
+    long blackListTime();
+
+    int timeOut();
+
+    KestrelDestinationSelector getDestinationSelector();
 }

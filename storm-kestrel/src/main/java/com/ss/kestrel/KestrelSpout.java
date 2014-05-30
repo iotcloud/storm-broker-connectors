@@ -51,7 +51,7 @@ public class KestrelSpout extends BaseRichSpout {
         this.collector = spoutOutputCollector;
 
         try {
-            for (KestrelDestination e : configurator.destinations()) {
+            for (KestrelDestination e : configurator.destinations().values()) {
                 KestrelConsumer consumer = new KestrelConsumer(null, e, messages);
                 consumer.open();
 
