@@ -3,15 +3,18 @@ package com.ss.kestrel;
 import backtype.storm.topology.OutputFieldsDeclarer;
 
 import java.util.List;
-import java.util.Map;
 
 public interface KestrelConfigurator {
     public static final int ACK_MESSAGE = 1;
     public static final int NO_ACK = 0;
 
+    String getHost();
+
+    int getPort();
+
     int ackMode();
 
-    Map<String, KestrelDestination> destinations();
+    List<String> destinations();
 
     KestrelMessageBuilder getMessageBuilder();
 
@@ -19,7 +22,7 @@ public interface KestrelConfigurator {
 
     int queueSize();
 
-    long expirationTime();
+    int expirationTime();
 
     long blackListTime();
 

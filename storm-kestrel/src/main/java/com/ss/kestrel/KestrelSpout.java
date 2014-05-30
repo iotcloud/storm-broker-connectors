@@ -23,7 +23,7 @@ public class KestrelSpout extends BaseRichSpout {
 
     private Map<Long, KestrelMessage> pendingMessages = new ConcurrentHashMap<Long, KestrelMessage>();
 
-    private Map<KestrelDestination, KestrelConsumer> messageConsumers = new HashMap<KestrelDestination, KestrelConsumer>();
+    private Map<String, KestrelConsumer> messageConsumers = new HashMap<String, KestrelConsumer>();
 
     private SpoutOutputCollector collector;
 
@@ -51,8 +51,8 @@ public class KestrelSpout extends BaseRichSpout {
         this.collector = spoutOutputCollector;
 
         try {
-            for (KestrelDestination e : configurator.destinations().values()) {
-                KestrelConsumer consumer = new KestrelConsumer(null, e, messages);
+            for (String e : configurator.destinations()) {
+                KestrelConsumer consumer = new KestrelConsumer(configurator.getHost(), configurator.getPort(), e, messages);
                 consumer.open();
 
                 messageConsumers.put(e, consumer);
@@ -91,7 +91,7 @@ public class KestrelSpout extends BaseRichSpout {
 
         KestrelMessage msg = this.pendingMessages.remove(msgId);
         if (msg != null) {
-            KestrelConsumer consumer = messageConsumers.get(msg.getDestination());
+            KestrelConsumer consumer = messageConsumers.get(msg.getQueue());
             consumer.ack(msg);
             logger.debug("JMS Message acked: " + msgId);
         } else {
@@ -109,7 +109,7 @@ public class KestrelSpout extends BaseRichSpout {
 
         KestrelMessage msg = this.pendingMessages.remove(msgId);
         if (msg != null) {
-            KestrelConsumer consumer = messageConsumers.get(msg.getDestination());
+            KestrelConsumer consumer = messageConsumers.get(msg.getQueue());
             consumer.fail(msg);
             logger.debug("JMS Message acked: " + msgId);
         } else {

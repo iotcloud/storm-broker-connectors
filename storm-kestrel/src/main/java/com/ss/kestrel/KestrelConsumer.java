@@ -16,7 +16,7 @@ public class KestrelConsumer {
 
     public static final int MAX_ITEMS = 1024;
 
-    private Logger logger;
+    private static Logger logger = LoggerFactory.getLogger(KestrelConsumer.class);
 
     private KestrelThriftClient client = null;
 
@@ -26,20 +26,19 @@ public class KestrelConsumer {
 
     private int timeoutMillis = 30000;
 
-    private KestrelDestination destination;
-
     private long sleepTime = 0;
 
-    public KestrelConsumer(Logger logger, KestrelDestination destination, BlockingQueue<KestrelMessage> messages) {
-        if (logger == null) {
-            this.logger = LoggerFactory.getLogger(KestrelConsumer.class);
-        }
-        this.messages = messages;
-        this.destination = destination;
-    }
+    private String queueName;
 
-    public KestrelConsumer(KestrelDestination destination, BlockingQueue<KestrelMessage> messages) {
-        this(null, destination, messages);
+    private String host;
+
+    private int port;
+
+    public KestrelConsumer(String host, int port, String queueName, BlockingQueue<KestrelMessage> messages) {
+        this.messages = messages;
+        this.queueName = queueName;
+        this.host = host;
+        this.port = port;
     }
 
     public void setTimeoutMillis(int timeoutMillis) {
@@ -80,12 +79,13 @@ public class KestrelConsumer {
     }
 
     public void close() {
+        run = false;
         closeClient();
     }
 
     private KestrelThriftClient getValidClient() throws TException {
         if (client == null) {
-            client = new KestrelThriftClient(destination.getHost(), destination.getPort());
+            client = new KestrelThriftClient(host, port);
         }
         return client;
     }
@@ -102,32 +102,31 @@ public class KestrelConsumer {
             while (run) {
                 if (System.currentTimeMillis() < sleepTime) {
                     boolean queueWorking = false;
-                    for (String q : destination.getQueues()) {
-                        try {
-                            getValidClient();
-                        } catch (TException e) {
-                            closeClient();
-                            sleepTime = System.currentTimeMillis() + blackListTime;
-                            break;
-                        }
+
+                    try {
+                        getValidClient();
+                    } catch (TException e) {
+                        closeClient();
+                        sleepTime = System.currentTimeMillis() + blackListTime;
+                        break;
+                    }
 
 
-                        List<Item> items;
-                        try {
-                            items = client.get(q, MAX_ITEMS, 0, timeoutMillis);
-                            queueWorking = true;
-                            if (items != null) {
-                                for (Item item : items) {
-                                    KestrelMessage m = new KestrelMessage(item.get_data(), item.get_id(), destination, q);
-                                    messages.put(m);
-                                }
+                    List<Item> items;
+                    try {
+                        items = client.get(queueName, MAX_ITEMS, 0, timeoutMillis);
+                        queueWorking = true;
+                        if (items != null) {
+                            for (Item item : items) {
+                                KestrelMessage m = new KestrelMessage(item.get_data(), item.get_id(), queueName);
+                                messages.put(m);
                             }
-                        } catch (TException e) {
-                            logger.debug("Error retrieving messages from queue {} and host {} port {}", q, destination.getHost(), destination.getPort());
-                            closeClient();
-                        } catch (InterruptedException e) {
-                            logger.error("Failed to add the message to the queue", e);
                         }
+                    } catch (TException e) {
+                        logger.debug("Error retrieving messages from queue {} and host {} port {}", queueWorking, host, port);
+                        closeClient();
+                    } catch (InterruptedException e) {
+                        logger.error("Failed to add the message to the queue", e);
                     }
                     // if a single queue isn't working we are going to sleep
                     if (!queueWorking) {

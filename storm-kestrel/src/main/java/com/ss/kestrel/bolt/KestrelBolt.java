@@ -6,7 +6,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import com.ss.kestrel.KestrelConfigurator;
-import com.ss.kestrel.KestrelDestination;
 import com.ss.kestrel.KestrelMessage;
 import com.ss.kestrel.KestrelProducer;
 import org.slf4j.Logger;
@@ -22,7 +21,7 @@ public class KestrelBolt extends BaseRichBolt {
 
     private transient OutputCollector collector;
 
-    private Map<KestrelDestination, KestrelProducer> messageProducers = new HashMap<KestrelDestination, KestrelProducer>();
+    private Map<String, KestrelProducer> messageProducers = new HashMap<String, KestrelProducer>();
 
     public KestrelBolt(KestrelConfigurator configurator) {
         this.configurator = configurator;
@@ -32,10 +31,10 @@ public class KestrelBolt extends BaseRichBolt {
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
 
-        for (KestrelDestination queue : configurator.destinations().values()) {
-            KestrelProducer consumer = new KestrelProducer(queue);
+        for (String queue : configurator.destinations()) {
+            KestrelProducer consumer = new KestrelProducer(configurator.getHost(), configurator.getPort(), queue);
             consumer.setBlackListTime(configurator.blackListTime());
-            consumer.setTimeoutMillis(configurator.timeOut());
+            consumer.setExpirationTime(configurator.expirationTime());
 
             consumer.open();
             messageProducers.put(queue, consumer);
