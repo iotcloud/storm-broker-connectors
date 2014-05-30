@@ -32,7 +32,7 @@ public class KestrelBolt extends BaseRichBolt {
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
 
-        for (KestrelDestination queue : configurator.destinations()) {
+        for (KestrelDestination queue : configurator.destinations().values()) {
             KestrelProducer consumer = new KestrelProducer(queue);
             consumer.setBlackListTime(configurator.blackListTime());
             consumer.setTimeoutMillis(configurator.timeOut());
