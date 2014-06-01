@@ -1,10 +1,12 @@
 package com.ss.kestrel;
 
 import com.ss.kestrel.thrift.Item;
+import org.apache.thrift.TBaseHelper;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -100,9 +102,7 @@ public class KestrelConsumer {
         @Override
         public void run() {
             while (run) {
-                if (System.currentTimeMillis() < sleepTime) {
-                    boolean queueWorking = false;
-
+                if (System.currentTimeMillis() > sleepTime) {
                     try {
                         getValidClient();
                     } catch (TException e) {
@@ -114,24 +114,23 @@ public class KestrelConsumer {
 
                     List<Item> items;
                     try {
-                        items = client.get(queueName, MAX_ITEMS, 0, timeoutMillis);
-                        queueWorking = true;
+                        items = client.get(queueName, MAX_ITEMS, 0, 0);
                         if (items != null) {
                             for (Item item : items) {
-                                KestrelMessage m = new KestrelMessage(item.get_data(), item.get_id(), queueName);
+//                                byte[] bytes = new byte[item.buffer_for_data().remaining() ];
+//                                item.buffer_for_data().get(bytes, 0, bytes.length);
+                                //byte[] bytes = TBaseHelper.byteBufferToByteArray(item.get_data()buffer_for_data());
+                                byte[] bytes = item.get_data();
+                                byte[] newBytes = Arrays.copyOf(bytes, bytes.length);
+                                KestrelMessage m = new KestrelMessage(newBytes, item.get_id(), queueName);
                                 messages.put(m);
                             }
                         }
                     } catch (TException e) {
-                        logger.debug("Error retrieving messages from queue {} and host {} port {}", queueWorking, host, port);
+                        logger.debug("Error retrieving messages from queue {} and host {} port {}", queueName, host, port);
                         closeClient();
                     } catch (InterruptedException e) {
                         logger.error("Failed to add the message to the queue", e);
-                    }
-                    // if a single queue isn't working we are going to sleep
-                    if (!queueWorking) {
-                        closeClient();
-                        sleepTime = System.currentTimeMillis() + blackListTime;
                     }
                 } else {
                     try {

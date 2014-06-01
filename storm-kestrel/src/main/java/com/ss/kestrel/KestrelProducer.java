@@ -80,13 +80,13 @@ public class KestrelProducer {
         @Override
         public void run() {
             while (run) {
-                if (System.currentTimeMillis() < sleepTime) {
+                if (System.currentTimeMillis() > sleepTime) {
                     try {
                         getValidClient();
                     } catch (TException e) {
                         closeClient();
                         sleepTime = System.currentTimeMillis() + blackListTime;
-                        break;
+                        continue;
                     }
 
                     try {
@@ -97,9 +97,7 @@ public class KestrelProducer {
                             for (int i = 0; i < size; i++) {
                                 KestrelMessage input = messages.take();
                                 if (input.getData() != null) {
-                                    ByteBuffer byteBuffer = ByteBuffer.allocate((input.getData()).length);
-                                    byteBuffer.put(input.getData());
-
+                                    ByteBuffer byteBuffer = ByteBuffer.wrap(input.getData());
                                     sendBufferList.add(byteBuffer);
                                 } else {
                                     throw new RuntimeException("Expepected byte array after conversion");

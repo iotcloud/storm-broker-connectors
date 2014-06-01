@@ -80,4 +80,35 @@ public class KestrelThriftClient {
     public void flush_all_queues() throws TException {
         client.flush_all_queues();
     }
+
+    public static void main(String[] args) {
+        try {
+            List<ByteBuffer> messages = new ArrayList<ByteBuffer>();
+            String s = "";
+            for (int i = 0; i< 100; i++) {
+                s += "0";
+            }
+            s = System.currentTimeMillis() + "\r\n" + s;
+            KestrelThriftClient kc = new KestrelThriftClient("localhost", 2229);
+
+            for (int i = 0 ; i < 100; i++) {
+                messages.add(ByteBuffer.wrap(s.getBytes()));
+            }
+
+//            for (int i= 0; i < 10; i++) {
+//                kc.put("aaaaaa", s, 30000);
+//            }
+            kc.put("aaaaaa", messages, 30000);
+
+            List<Item> item = kc.get("aaaaaa", 100, 0, 0);
+            if (item != null) {
+                for (Item it : item) {
+                    System.out.println(new String(it.get_data()));
+                }
+            }
+            kc.close();
+        } catch (TException e) {
+            e.printStackTrace();
+        }
+    }
 }
