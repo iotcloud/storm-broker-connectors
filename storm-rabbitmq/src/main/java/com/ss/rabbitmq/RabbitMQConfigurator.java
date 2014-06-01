@@ -1,7 +1,6 @@
 package com.ss.rabbitmq;
 
 import backtype.storm.topology.OutputFieldsDeclarer;
-import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.Serializable;
 import java.util.List;

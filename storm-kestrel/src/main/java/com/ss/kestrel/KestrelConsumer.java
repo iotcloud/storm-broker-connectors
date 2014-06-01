@@ -1,7 +1,6 @@
 package com.ss.kestrel;
 
 import com.ss.kestrel.thrift.Item;
-import org.apache.thrift.TBaseHelper;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,9 +116,6 @@ public class KestrelConsumer {
                         items = client.get(queueName, MAX_ITEMS, 0, 0);
                         if (items != null) {
                             for (Item item : items) {
-//                                byte[] bytes = new byte[item.buffer_for_data().remaining() ];
-//                                item.buffer_for_data().get(bytes, 0, bytes.length);
-                                //byte[] bytes = TBaseHelper.byteBufferToByteArray(item.get_data()buffer_for_data());
                                 byte[] bytes = item.get_data();
                                 byte[] newBytes = Arrays.copyOf(bytes, bytes.length);
                                 KestrelMessage m = new KestrelMessage(newBytes, item.get_id(), queueName);
