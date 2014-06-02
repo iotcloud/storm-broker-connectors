@@ -2,7 +2,9 @@ package com.ss.mqtt;
 
 import org.fusesource.hawtbuf.Buffer;
 
-public class MQTTMessage {
+import java.io.Serializable;
+
+public class MQTTMessage implements Serializable {
     private Buffer body;
 
     private String queue;

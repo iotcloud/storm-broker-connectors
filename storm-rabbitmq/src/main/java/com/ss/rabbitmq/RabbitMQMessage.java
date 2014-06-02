@@ -3,7 +3,9 @@ package com.ss.rabbitmq;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
 
-public class RabbitMQMessage {
+import java.io.Serializable;
+
+public class RabbitMQMessage implements Serializable {
     private String consumerTag;
     private Envelope envelope;
     private AMQP.BasicProperties properties;

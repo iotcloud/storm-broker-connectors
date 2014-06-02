@@ -1,8 +1,9 @@
 package com.ss.jms;
 
 import javax.jms.Message;
+import java.io.Serializable;
 
-public class JMSMessage {
+public class JMSMessage implements Serializable {
     private Message message;
 
     private String queue;

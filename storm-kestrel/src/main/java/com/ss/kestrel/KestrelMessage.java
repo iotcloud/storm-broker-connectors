@@ -1,6 +1,8 @@
 package com.ss.kestrel;
 
-public class KestrelMessage {
+import java.io.Serializable;
+
+public class KestrelMessage implements Serializable {
     private byte [] data; // required
     private long id; // required
     private String queue;
