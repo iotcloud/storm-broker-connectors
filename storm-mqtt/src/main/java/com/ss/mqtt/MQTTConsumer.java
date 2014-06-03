@@ -109,7 +109,7 @@ public class MQTTConsumer {
 
             public void onPublish(UTF8Buffer topic, Buffer payload, Runnable onComplete) {
                 final String uuid = UUID.randomUUID().toString();
-                MQTTMessage message = new MQTTMessage(uuid, payload, topic.toString(), onComplete);
+                MQTTMessage message = new MQTTMessage(uuid, payload.toByteArray(), topic.toString(), onComplete);
                 try {
                     messages.put(message);
                 } catch (InterruptedException e) {

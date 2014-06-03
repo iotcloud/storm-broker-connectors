@@ -54,7 +54,7 @@ public class MQTTBolt extends BaseRichBolt {
                 MQTTProducer producer = messageProducers.get(destination);
 
                 if (producer != null) {
-                    producer.send(message.getBody().toByteArray());
+                    producer.send(message.getBody());
                 }
 
             }

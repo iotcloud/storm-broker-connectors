@@ -5,7 +5,7 @@ import org.fusesource.hawtbuf.Buffer;
 import java.io.Serializable;
 
 public class MQTTMessage implements Serializable {
-    private Buffer body;
+    private byte[] body;
 
     private String queue;
 
@@ -13,14 +13,14 @@ public class MQTTMessage implements Serializable {
 
     private Runnable onComplete;
 
-    public MQTTMessage(String id, Buffer body, String queue, Runnable onComplete) {
+    public MQTTMessage(String id, byte[] body, String queue, Runnable onComplete) {
         this.body = body;
         this.queue = queue;
         this.onComplete = onComplete;
         this.id = id;
     }
 
-    public Buffer getBody() {
+    public byte[] getBody() {
         return body;
     }
 
