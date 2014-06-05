@@ -117,8 +117,7 @@ public class KestrelConsumer {
                         if (items != null) {
                             for (Item item : items) {
                                 byte[] bytes = item.get_data();
-                                byte[] newBytes = Arrays.copyOf(bytes, bytes.length);
-                                KestrelMessage m = new KestrelMessage(newBytes, item.get_id(), queueName);
+                                KestrelMessage m = new KestrelMessage(bytes, item.get_id(), queueName);
                                 messages.put(m);
                             }
                         }

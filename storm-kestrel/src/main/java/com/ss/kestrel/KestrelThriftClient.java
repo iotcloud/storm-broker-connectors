@@ -1,5 +1,6 @@
 package com.ss.kestrel;
 
+import backtype.storm.generated.Nimbus;
 import com.ss.kestrel.thrift.Item;
 import com.ss.kestrel.thrift.Kestrel;
 import com.ss.kestrel.thrift.QueueInfo;
@@ -85,7 +86,7 @@ public class KestrelThriftClient {
         try {
             List<ByteBuffer> messages = new ArrayList<ByteBuffer>();
             String s = "";
-            for (int i = 0; i< 100; i++) {
+            for (int i = 0; i< 1000; i++) {
                 s += "0";
             }
             s = System.currentTimeMillis() + "\r\n" + s;
@@ -98,15 +99,23 @@ public class KestrelThriftClient {
 //            for (int i= 0; i < 10; i++) {
 //                kc.put("aaaaaa", s, 30000);
 //            }
-            kc.put("aaaaaa", messages, 30000);
+           // kc.put("aaaaaa", messages, 30000);
 
-            List<Item> item = kc.get("aaaaaa", 100, 0, 0);
-            if (item != null) {
-                for (Item it : item) {
-                    System.out.println(new String(it.get_data()));
+            while (true) {
+                List<Item> item = kc.get("send_0", 100, 0, 0);
+                if (item != null) {
+                    List<ByteBuffer> send = new ArrayList<ByteBuffer>();
+                    for (Item it : item) {
+                        byte []b = it.get_data();
+                        ByteBuffer byteBuffer = ByteBuffer.wrap(b);
+                        String s1 = new String(b);
+                        System.out.println(s1);
+                        send.add(byteBuffer);
+                    }
+                    kc.put("recv_0", send, 30000);
                 }
             }
-            kc.close();
+            //kc.close();
         } catch (TException e) {
             e.printStackTrace();
         }
