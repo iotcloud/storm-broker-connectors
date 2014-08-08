@@ -47,8 +47,7 @@ public class RabbitMQSpout extends BaseRichSpout {
         collector = spoutOutputCollector;
 
         for (RabbitMQDestination queue : configurator.getQueueName()) {
-            MessageConsumer consumer = new MessageConsumer(messages, queue,
-                    configurator, reporter, logger);
+            MessageConsumer consumer = new MessageConsumer(messages, queue, configurator, reporter, logger);
             consumer.openConnection();
             messageConsumers.put(queue.getDestination(), consumer);
         }
