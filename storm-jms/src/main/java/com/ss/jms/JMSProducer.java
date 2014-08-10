@@ -1,10 +1,10 @@
 package com.ss.jms;
 
+import com.ss.commons.DestinationConfiguration;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 
 import javax.jms.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class JMSProducer {
     private ConnectionFactory cf;
@@ -13,25 +13,19 @@ public class JMSProducer {
 
     private Session session;
 
-    private int ackMode;
-
     private Logger logger;
 
-    private Destination destination;
-
-    private Lock lock = new ReentrantLock();
+    private DestinationConfiguration destination;
 
     private String queue;
 
     private MessageProducer producer;
 
-    public JMSProducer(String queue, ConnectionFactory cf, int ackMode, Logger logger,
-                       Destination destination) {
-        this.cf = cf;
-        this.ackMode = ackMode;
+    private Destination dest;
+
+    public JMSProducer(DestinationConfiguration destination, Logger logger) {
         this.logger = logger;
         this.destination = destination;
-        this.queue = queue;
     }
 
     public Session getSession() {
@@ -40,11 +34,38 @@ public class JMSProducer {
 
     public void open() {
         try {
+            boolean isQueue = false;
+            queue = destination.getProperty("queue");
+
+            if (queue == null) {
+                String msg = "The property queue must be specified";
+                logger.error(msg);
+                throw new RuntimeException(msg);
+            }
+
+            String ackModeStringValue = destination.getProperty("ackMode");
+            String isQueueStringValue = destination.getProperty("isQueue");
+            int ackMode = Session.AUTO_ACKNOWLEDGE;
+            if (ackModeStringValue != null) {
+                ackMode = Integer.parseInt(ackModeStringValue);
+            }
+            if (isQueueStringValue != null) {
+                isQueue = Boolean.parseBoolean(isQueueStringValue);
+            }
+
+
+            if (!isQueue) {
+                dest = session.createTopic(queue);
+            } else {
+                dest = session.createQueue(queue);
+            }
+
+            this.cf = new ActiveMQConnectionFactory(destination.getUrl());
             this.connection = cf.createConnection();
-            this.session = connection.createSession(false, this.ackMode);
+            this.session = connection.createSession(false, ackMode);
             this.connection.start();
 
-            producer = session.createProducer(destination);
+            producer = session.createProducer(dest);
         } catch (JMSException e) {
             String s = "Failed to create the JMS Connection";
             logger.error(s, e);
@@ -54,7 +75,7 @@ public class JMSProducer {
 
     public void send(Message message) {
         try {
-            producer.send(destination, message);
+            producer.send(dest, message);
         } catch (JMSException e) {
             String s = "Failed to send the JMS Message";
             logger.error(s, e);

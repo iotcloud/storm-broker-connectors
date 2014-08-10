@@ -1,6 +1,7 @@
 package com.ss.jms;
 
-import com.ss.commons.Destination;
+import com.ss.commons.DestinationConfiguration;
+import com.ss.commons.MessageContext;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,14 +21,14 @@ public class JMSConsumer {
 
     private Logger logger;
 
-    private BlockingQueue<JMSMessage> messages;
+    private BlockingQueue<MessageContext> messages;
 
     private Lock lock = new ReentrantLock();
 
-    private Destination destination;
+    private DestinationConfiguration destination;
 
-    public JMSConsumer(Destination destination, Logger logger,
-                       BlockingQueue<JMSMessage> messages) {
+    public JMSConsumer(DestinationConfiguration destination, Logger logger,
+                       BlockingQueue<MessageContext> messages) {
         this.logger = logger;
         this.messages = messages;
         this.destination = destination;
@@ -72,7 +73,7 @@ public class JMSConsumer {
                 @Override
                 public void onMessage(Message message) {
                     try {
-                        messages.put(new JMSMessage(message, queue));
+                        messages.put(new MessageContext(message, destination.getName()));
                     } catch (InterruptedException e) {
                         logger.warn("Error occurred while putting the message to queue", e);
                     }

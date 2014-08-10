@@ -5,28 +5,27 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
-import com.ss.jms.JMSConfigurator;
+import com.ss.commons.BoltConfigurator;
+import com.ss.commons.DestinationChangeListener;
+import com.ss.commons.DestinationConfiguration;
 import com.ss.jms.JMSMessage;
 import com.ss.jms.JMSProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.Message;
 import java.util.HashMap;
 import java.util.Map;
 
 public class JMSBolt extends BaseRichBolt {
     private Logger logger;
 
-    private JMSConfigurator configurator;
+    private BoltConfigurator configurator;
 
     private Map<String, JMSProducer> messageProducers = new HashMap<String, JMSProducer>();
 
     private OutputCollector collector;
 
-    public JMSBolt(JMSConfigurator configurator, Logger logger) {
+    public JMSBolt(BoltConfigurator configurator, Logger logger) {
         if(configurator == null){
             throw new IllegalArgumentException("Configurator has not been set.");
         }
@@ -42,13 +41,23 @@ public class JMSBolt extends BaseRichBolt {
         this.collector = outputCollector;
 
         try {
-            ConnectionFactory cf = this.configurator.connectionFactory();
-            for (Map.Entry<String, Destination> e : configurator.destinations().entrySet()) {
-                JMSProducer consumer = new JMSProducer(e.getKey(), cf, configurator.ackMode(), logger, e.getValue());
-                consumer.open();
+            configurator.getDestinationChanger().registerListener(new DestinationChangeListener() {
+                @Override
+                public void addDestination(String name, DestinationConfiguration destination) {
+                    JMSProducer consumer = new JMSProducer(destination, logger);
+                    consumer.open();
 
-                messageProducers.put(e.getKey(), consumer);
-            }
+                    messageProducers.put(name, consumer);
+                }
+
+                @Override
+                public void removeDestination(String name) {
+                    JMSProducer producer = messageProducers.remove(name);
+                    if (producer != null) {
+                        producer.close();
+                    }
+                }
+            });
         } catch (Exception e) {
             logger.warn("Error creating JMS connection.", e);
         }
