@@ -8,11 +8,12 @@ import backtype.storm.tuple.Tuple;
 import com.ss.commons.BoltConfigurator;
 import com.ss.commons.DestinationChangeListener;
 import com.ss.commons.DestinationConfiguration;
-import com.ss.jms.JMSMessage;
 import com.ss.jms.JMSProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.Message;
+import javax.jms.Session;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +26,10 @@ public class JMSBolt extends BaseRichBolt {
 
     private OutputCollector collector;
 
+    private int ackMode = Session.AUTO_ACKNOWLEDGE;
+
+    private boolean isQueue = true;
+
     public JMSBolt(BoltConfigurator configurator, Logger logger) {
         if(configurator == null){
             throw new IllegalArgumentException("Configurator has not been set.");
@@ -33,6 +38,17 @@ public class JMSBolt extends BaseRichBolt {
         this.configurator = configurator;
         if (logger == null) {
             this.logger = LoggerFactory.getLogger(JMSBolt.class);
+        }
+
+        String ackModeStringValue = configurator.getProperties().get("ackMode");
+
+        if (ackModeStringValue != null) {
+            ackMode = Integer.parseInt(ackModeStringValue);
+        }
+
+        String isQueueStringValue = configurator.getProperties().get("isQueue");
+        if (isQueueStringValue != null) {
+            isQueue = Boolean.parseBoolean(isQueueStringValue);
         }
     }
 
@@ -44,7 +60,7 @@ public class JMSBolt extends BaseRichBolt {
             configurator.getDestinationChanger().registerListener(new DestinationChangeListener() {
                 @Override
                 public void addDestination(String name, DestinationConfiguration destination) {
-                    JMSProducer consumer = new JMSProducer(destination, logger);
+                    JMSProducer consumer = new JMSProducer(destination, logger, ackMode, isQueue);
                     consumer.open();
 
                     messageProducers.put(name, consumer);
@@ -69,9 +85,9 @@ public class JMSBolt extends BaseRichBolt {
             String destination = configurator.getDestinationSelector().select(tuple);
             if (destination != null) {
                 JMSProducer producer = messageProducers.get(destination);
-                JMSMessage message = (JMSMessage) configurator.getMessageBuilder().serialize(tuple, producer.getSession());
+                Message message = (Message) configurator.getMessageBuilder().serialize(tuple, producer.getSession());
                 if (producer != null) {
-                    producer.send(message.getMessage());
+                    producer.send(message);
                 }
             } else {
                 logger.warn("The DestinationSelector should give a valid destination");

@@ -27,16 +27,21 @@ public class JMSConsumer {
 
     private DestinationConfiguration destination;
 
+    private int ackMode;
+
+    private boolean isQueue = false;
+
     public JMSConsumer(DestinationConfiguration destination, Logger logger,
-                       BlockingQueue<MessageContext> messages) {
+                       BlockingQueue<MessageContext> messages, int ackMode, boolean isQueue) {
         this.logger = logger;
         this.messages = messages;
         this.destination = destination;
+        this.ackMode = ackMode;
+        this.isQueue = isQueue;
     }
 
     public void open() {
         try {
-            boolean isQueue = false;
             final String queue = destination.getProperty("queue");
 
             if (queue == null) {
@@ -45,15 +50,6 @@ public class JMSConsumer {
                 throw new RuntimeException(msg);
             }
 
-            String ackModeStringValue = destination.getProperty("ackMode");
-            String isQueueStringValue = destination.getProperty("isQueue");
-            int ackMode = Session.AUTO_ACKNOWLEDGE;
-            if (ackModeStringValue != null) {
-                ackMode = Integer.parseInt(ackModeStringValue);
-            }
-            if (isQueueStringValue != null) {
-                isQueue = Boolean.parseBoolean(isQueueStringValue);
-            }
             logger.info("Opening JMS Consumer for destination {}", queue);
 
             this.cf = new ActiveMQConnectionFactory(destination.getUrl());

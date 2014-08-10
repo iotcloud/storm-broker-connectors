@@ -26,11 +26,13 @@ public class JMSSpout extends BaseRichSpout {
 
     private Map<String, MessageContext> pendingMessages = new ConcurrentHashMap<String, MessageContext>();
 
-    private Map<String, DestinationConfiguration> destinations = new HashMap<String, DestinationConfiguration>();
-
     private Map<String, JMSConsumer> messageConsumers = new HashMap<String, JMSConsumer>();
 
     private SpoutOutputCollector collector;
+
+    private int ackMode = Session.AUTO_ACKNOWLEDGE;
+
+    private boolean isQueue = true;
 
     public JMSSpout(SpoutConfigurator configurator, Logger logger) {
         if(configurator == null){
@@ -40,6 +42,16 @@ public class JMSSpout extends BaseRichSpout {
         this.configurator = configurator;
         if (logger == null) {
             this.logger = LoggerFactory.getLogger(JMSSpout.class);
+        }
+
+        String ackModeStringValue = configurator.getProperties().get("ackMode");
+        if (ackModeStringValue != null) {
+            ackMode = Integer.parseInt(ackModeStringValue);
+        }
+
+        String isQueueStringValue = configurator.getProperties().get("isQueue");
+        if (isQueueStringValue != null) {
+            isQueue = Boolean.parseBoolean(isQueueStringValue);
         }
     }
 
@@ -56,8 +68,7 @@ public class JMSSpout extends BaseRichSpout {
         configurator.getDestinationChanger().registerListener(new DestinationChangeListener() {
             @Override
             public void addDestination(String name, DestinationConfiguration destination) {
-                destinations.put(name, destination);
-                JMSConsumer consumer = new JMSConsumer(destination, logger, messages);
+                JMSConsumer consumer = new JMSConsumer(destination, logger, messages, ackMode, isQueue);
                 messageConsumers.put(name, consumer);
             }
 
@@ -67,7 +78,6 @@ public class JMSSpout extends BaseRichSpout {
                 if (consumer != null) {
                     consumer.close();
                 }
-                destinations.remove(name);
             }
         });
     }
@@ -93,8 +103,7 @@ public class JMSSpout extends BaseRichSpout {
                 logger.warn("Error acknowldging JMS message: " + msgId, e);
             }
         } else {
-            DestinationConfiguration destination = destinations.get(msg.getOriginDestination());
-            if (getAckMode(destination) != Session.AUTO_ACKNOWLEDGE) {
+            if (getAckMode() != Session.AUTO_ACKNOWLEDGE) {
                 logger.warn("Couldn't acknowledge unknown JMS message ID: " + msgId);
             }
         }
@@ -121,7 +130,6 @@ public class JMSSpout extends BaseRichSpout {
     public void nextTuple() {
         MessageContext msg;
         while ((msg = messages.poll()) != null) {
-            DestinationConfiguration destination = destinations.get(msg.getOriginDestination());
             List<Object> tuple = configurator.getMessageBuilder().deSerialize(msg);
             if (!tuple.isEmpty()) {
                 Message message;
@@ -132,7 +140,7 @@ public class JMSSpout extends BaseRichSpout {
                 }
 
                 try {
-                    if (getAckMode(destination) != Session.AUTO_ACKNOWLEDGE
+                    if (getAckMode() != Session.AUTO_ACKNOWLEDGE
                             || (message.getJMSDeliveryMode() != Session.AUTO_ACKNOWLEDGE)) {
                         logger.debug("Requesting acks.");
                         this.collector.emit(tuple, message.getJMSMessageID());
@@ -153,12 +161,7 @@ public class JMSSpout extends BaseRichSpout {
         }
     }
 
-    private int getAckMode(DestinationConfiguration destination) {
-        String ackModeStringValue = destination.getProperty("ackMode");
-        int ackMode = Session.AUTO_ACKNOWLEDGE;
-        if (ackModeStringValue != null) {
-            ackMode = Integer.parseInt(ackModeStringValue);
-        }
+    private int getAckMode() {
         return ackMode;
     }
 }

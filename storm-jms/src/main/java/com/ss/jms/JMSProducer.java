@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import javax.jms.*;
 
 public class JMSProducer {
-    private ConnectionFactory cf;
 
     private Connection connection;
 
@@ -17,15 +16,19 @@ public class JMSProducer {
 
     private DestinationConfiguration destination;
 
-    private String queue;
-
     private MessageProducer producer;
 
     private Destination dest;
 
-    public JMSProducer(DestinationConfiguration destination, Logger logger) {
+    private int ackMode;
+
+    private boolean isQueue;
+
+    public JMSProducer(DestinationConfiguration destination, Logger logger, int ackMode, boolean isQueue) {
         this.logger = logger;
         this.destination = destination;
+        this.ackMode = ackMode;
+        this.isQueue = isQueue;
     }
 
     public Session getSession() {
@@ -34,8 +37,7 @@ public class JMSProducer {
 
     public void open() {
         try {
-            boolean isQueue = false;
-            queue = destination.getProperty("queue");
+            String queue = destination.getProperty("queue");
 
             if (queue == null) {
                 String msg = "The property queue must be specified";
@@ -43,24 +45,13 @@ public class JMSProducer {
                 throw new RuntimeException(msg);
             }
 
-            String ackModeStringValue = destination.getProperty("ackMode");
-            String isQueueStringValue = destination.getProperty("isQueue");
-            int ackMode = Session.AUTO_ACKNOWLEDGE;
-            if (ackModeStringValue != null) {
-                ackMode = Integer.parseInt(ackModeStringValue);
-            }
-            if (isQueueStringValue != null) {
-                isQueue = Boolean.parseBoolean(isQueueStringValue);
-            }
-
-
             if (!isQueue) {
                 dest = session.createTopic(queue);
             } else {
                 dest = session.createQueue(queue);
             }
 
-            this.cf = new ActiveMQConnectionFactory(destination.getUrl());
+            ConnectionFactory cf = new ActiveMQConnectionFactory(destination.getUrl());
             this.connection = cf.createConnection();
             this.session = connection.createSession(false, ackMode);
             this.connection.start();

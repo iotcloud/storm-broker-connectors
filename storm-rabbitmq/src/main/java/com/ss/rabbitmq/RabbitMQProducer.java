@@ -1,20 +1,13 @@
 package com.ss.rabbitmq;
 
 import com.rabbitmq.client.*;
+import com.ss.commons.DestinationConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class RabbitMQProducer {
-    public enum State {
-        INIT,
-        CONNECTED,
-        CLOSED,
-        ERROR,
-        RESTARTING
-    }
-
     private Connection connection;
 
     private Channel channel;
@@ -25,20 +18,26 @@ public class RabbitMQProducer {
 
     private ErrorReporter reporter;
 
-    private RabbitMQConfigurator configurator;
-
-    private State state = State.INIT;
-
     private Logger logger = LoggerFactory.getLogger(RabbitMQProducer.class);
 
-    private RabbitMQDestination destination;
+    private DestinationConfiguration destination;
 
-    public RabbitMQProducer(RabbitMQConfigurator configurator,
-                           ErrorReporter reporter,
-                           RabbitMQDestination destination) {
-        this.configurator = configurator;
+    private String exchangeName;
+
+    private String queue;
+
+    private String routingKey;
+
+    private int prefetchCount;
+
+    private boolean isReQueueOnFail = false;
+
+    public RabbitMQProducer(ErrorReporter reporter,
+                           DestinationConfiguration destination, int prefetchCount, boolean isReQueueOnFail) {
         this.reporter = reporter;
         this.destination = destination;
+        this.prefetchCount = prefetchCount;
+        this.isReQueueOnFail = isReQueueOnFail;
     }
 
     private void reset() {
@@ -50,6 +49,18 @@ public class RabbitMQProducer {
             close();
             open();
         }
+    }
+
+    private void readProps() {
+        queue = destination.getProperty("queue");
+        if (queue == null) {
+            String msg = "The property queue must be specified";
+            logger.error(msg);
+            throw new RuntimeException(msg);
+        }
+
+        routingKey = destination.getProperty("routingKey");
+        exchangeName = destination.getProperty("exchange");
     }
 
     public void close() {
@@ -73,7 +84,6 @@ public class RabbitMQProducer {
         consumerTag = null;
         channel = null;
         connection = null;
-        state = State.CLOSED;
     }
 
     public void open() {
@@ -81,27 +91,24 @@ public class RabbitMQProducer {
             connection = createConnection();
             channel = connection.createChannel();
 
-            if (configurator.getPrefetchCount() > 0) {
-                logger.info("setting basic.qos / prefetch count to " + configurator.getPrefetchCount() + " for " + configurator.getQueueName());
-                channel.basicQos(configurator.getPrefetchCount());
+            if (prefetchCount > 0) {
+                logger.info("setting basic.qos / prefetch count to " + prefetchCount + " for " + queue);
+                channel.basicQos(prefetchCount);
             }
 
-            channel.exchangeDeclare(destination.getExchange(), "direct", false);
-            channel.queueDeclare(destination.getDestination(), true, false, false, null);
-            channel.queueBind(destination.getDestination(), destination.getExchange(), destination.getRoutingKey());
-
-            state = State.CONNECTED;
+            channel.exchangeDeclare(exchangeName, "direct", false);
+            channel.queueDeclare(queue, true, false, false, null);
+            channel.queueBind(queue, exchangeName, routingKey);
         } catch (Exception e) {
-            state = State.ERROR;
             reset();
-            logger.error("could not open listener on queue " + configurator.getQueueName());
+            logger.error("could not open listener on queue " + queue);
             reporter.reportError(e);
         }
     }
 
     public void send(RabbitMQMessage message) {
         try {
-            channel.basicPublish(destination.getExchange(), destination.getRoutingKey(),
+            channel.basicPublish(exchangeName, routingKey,
                     message.getProperties(),
                     message.getBody());
         } catch (IOException e) {
@@ -112,7 +119,7 @@ public class RabbitMQProducer {
     private Connection createConnection() throws IOException {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
-            connectionFactory.setUri(configurator.getURL());
+            connectionFactory.setUri(destination.getUrl());
             Connection connection = connectionFactory.newConnection();
             connection.addShutdownListener(new ShutdownListener() {
                 @Override
@@ -122,11 +129,11 @@ public class RabbitMQProducer {
                     reset();
                 }
             });
-            logger.info("connected to rabbitmq: " + connection + " for " + configurator.getQueueName());
+            logger.info("connected to rabbitmq: " + connection + " for " + queue);
             return connection;
 
         } catch (Exception e) {
-            logger.info("connected to rabbitmq: " + connection + " for " + configurator.getQueueName());
+            logger.info("connected to rabbitmq: " + connection + " for " + queue);
             reporter.reportError(e);
             return null;
         }
@@ -146,7 +153,7 @@ public class RabbitMQProducer {
     }
 
     public void failMessage(Long msgId) {
-        if (configurator.isReQueueOnFail()) {
+        if (isReQueueOnFail) {
             failWithRedelivery(msgId);
         } else {
             deadLetter(msgId);

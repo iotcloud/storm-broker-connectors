@@ -4,6 +4,10 @@ import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
+import com.ss.commons.DestinationChangeListener;
+import com.ss.commons.DestinationConfiguration;
+import com.ss.commons.MessageContext;
+import com.ss.commons.SpoutConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,25 +20,46 @@ public class RabbitMQSpout extends BaseRichSpout {
 
     private ErrorReporter reporter;
 
-    private RabbitMQConfigurator configurator;
+    private SpoutConfigurator configurator;
 
     private transient SpoutOutputCollector collector;
 
-    private Map<Long, String> queueMessageMap = new HashMap<Long, String>();
+    private Map<String, String> queueMessageMap = new HashMap<String, String>();
 
     private Map<String, MessageConsumer> messageConsumers = new HashMap<String, MessageConsumer>();
 
-    private BlockingQueue<RabbitMQMessage> messages;
+    private BlockingQueue<MessageContext> messages;
 
-    public RabbitMQSpout(RabbitMQConfigurator configurator, ErrorReporter reporter) {
+    private int prefetchCount = 0;
+
+    private boolean isReQueueOnFail = false;
+
+    private boolean autoAck = true;
+
+    public RabbitMQSpout(SpoutConfigurator configurator, ErrorReporter reporter) {
         this(configurator, reporter, LoggerFactory.getLogger(RabbitMQSpout.class));
     }
 
-    public RabbitMQSpout(RabbitMQConfigurator configurator, ErrorReporter reporter, Logger logger) {
+    public RabbitMQSpout(SpoutConfigurator configurator, ErrorReporter reporter, Logger logger) {
         this.configurator = configurator;
         this.reporter = reporter;
         this.logger = logger;
-        this.messages = new ArrayBlockingQueue<RabbitMQMessage>(configurator.queueSize());
+        this.messages = new ArrayBlockingQueue<MessageContext>(configurator.queueSize());
+
+        String prefetchCountString = configurator.getProperties().get("prefectCount");
+        if (prefetchCountString != null) {
+            prefetchCount = Integer.parseInt(prefetchCountString);
+        }
+
+        String isReQueueOnFailString = configurator.getProperties().get("reQueue");
+        if (isReQueueOnFailString != null) {
+            isReQueueOnFail = Boolean.parseBoolean(isReQueueOnFailString);
+        }
+
+        String ackModeStringValue = configurator.getProperties().get("ackMode");
+        if (ackModeStringValue != null && ackModeStringValue.equals("manual")) {
+            autoAck = false;
+        }
     }
 
     @Override
@@ -46,22 +71,33 @@ public class RabbitMQSpout extends BaseRichSpout {
     public void open(Map map, TopologyContext topologyContext, final SpoutOutputCollector spoutOutputCollector) {
         collector = spoutOutputCollector;
 
-        for (RabbitMQDestination queue : configurator.getQueueName()) {
-            MessageConsumer consumer = new MessageConsumer(messages, queue, configurator, reporter, logger);
-            consumer.openConnection();
-            messageConsumers.put(queue.getDestination(), consumer);
-        }
+        configurator.getDestinationChanger().registerListener(new DestinationChangeListener() {
+            @Override
+            public void addDestination(String name, DestinationConfiguration destination) {
+                MessageConsumer consumer = new MessageConsumer(messages, destination, reporter, logger, prefetchCount, isReQueueOnFail, autoAck);
+                consumer.openConnection();
+                messageConsumers.put(name, consumer);
+            }
+
+            @Override
+            public void removeDestination(String name) {
+                MessageConsumer consumer = messageConsumers.remove(name);
+                if (consumer != null) {
+                    consumer.close();
+                }
+            }
+        });
     }
 
     @Override
     public void nextTuple() {
-        RabbitMQMessage message;
+        MessageContext message;
         while ((message = messages.poll()) != null) {
             List<Object> tuple = extractTuple(message);
             if (!tuple.isEmpty()) {
-                collector.emit(tuple, message.getEnvelope().getDeliveryTag());
-                if (!configurator.isAutoAcking()) {
-                    queueMessageMap.put(message.getEnvelope().getDeliveryTag(), message.getQueue());
+                collector.emit(tuple, message.getId());
+                if (!autoAck) {
+                    queueMessageMap.put(message.getId(), message.getOriginDestination());
                 }
             }
         }
@@ -69,13 +105,13 @@ public class RabbitMQSpout extends BaseRichSpout {
 
     @Override
     public void ack(Object msgId) {
-        if (msgId instanceof Long) {
-            if (!configurator.isAutoAcking()) {
+        if (msgId instanceof String) {
+            if (!autoAck) {
                 String name =  queueMessageMap.remove(msgId);
                 if (name != null) {
                     MessageConsumer consumer = messageConsumers.get(name);
                     if (consumer != null) {
-                        consumer.ackMessage((Long) msgId);
+                        consumer.ackMessage(Long.parseLong(msgId.toString()));
                     }
                 }
             }
@@ -84,11 +120,11 @@ public class RabbitMQSpout extends BaseRichSpout {
 
     @Override
     public void fail(Object msgId) {
-        if (msgId instanceof Long) {
-            if (!configurator.isAutoAcking()) {
+        if (msgId instanceof String) {
+            if (!autoAck) {
                 String name =  queueMessageMap.remove(msgId);
                 MessageConsumer consumer = messageConsumers.get(name);
-                consumer.failMessage((Long) msgId);
+                consumer.failMessage(Long.parseLong(msgId.toString()));
             }
         }
     }
@@ -96,13 +132,13 @@ public class RabbitMQSpout extends BaseRichSpout {
     @Override
     public void close() {
         for (MessageConsumer consumer : messageConsumers.values()) {
-            consumer.closeConnection();
+            consumer.close();
         }
         super.close();
     }
 
-    public List<Object> extractTuple(RabbitMQMessage delivery) {
-        long deliveryTag = delivery.getEnvelope().getDeliveryTag();
+    public List<Object> extractTuple(MessageContext delivery) {
+        String deliveryTag = delivery.getId();
         try {
             List<Object> tuple = configurator.getMessageBuilder().deSerialize(delivery);
             if (tuple != null && !tuple.isEmpty()) {
@@ -115,11 +151,10 @@ public class RabbitMQSpout extends BaseRichSpout {
             logger.warn("Deserialization error for msgId " + deliveryTag, e);
             collector.reportError(e);
         }
-        MessageConsumer consumer = messageConsumers.get(delivery.getQueue());
+        MessageConsumer consumer = messageConsumers.get(delivery.getOriginDestination());
         if (consumer != null) {
-            consumer.deadLetter(deliveryTag);
+            consumer.deadLetter(Long.parseLong(delivery.getId()));
         }
-
         return Collections.emptyList();
     }
 }
