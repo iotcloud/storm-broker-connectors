@@ -9,29 +9,15 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>storm-jms</artifactId>
-
+    <artifactId>commons</artifactId>
     <dependencies>
-        <dependency>
-            <groupId>org.apache.storm</groupId>
-            <artifactId>storm-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-jms_1.1_spec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-core</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>storm-bcs</groupId>
-            <artifactId>commons</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.apache.storm</groupId>
+            <artifactId>storm-core</artifactId>
         </dependency>
     </dependencies>
 </project>

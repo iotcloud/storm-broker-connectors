@@ -5,7 +5,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 
 public interface JMSConfigurator extends Serializable {

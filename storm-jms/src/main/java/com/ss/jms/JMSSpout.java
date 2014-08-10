@@ -4,6 +4,8 @@ import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
+import com.ss.commons.*;
+import com.ss.commons.Destination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JMSSpout extends BaseRichSpout {
     private Logger logger;
 
-    private JMSConfigurator configurator;
+    private SpoutConfigurator configurator;
 
     private BlockingQueue<JMSMessage> messages;
 
@@ -28,7 +30,7 @@ public class JMSSpout extends BaseRichSpout {
 
     private SpoutOutputCollector collector;
 
-    public JMSSpout(JMSConfigurator configurator, Logger logger) {
+    public JMSSpout(SpoutConfigurator configurator, Logger logger) {
         if(configurator == null){
             throw new IllegalArgumentException("Configurator has not been set.");
         }
@@ -49,17 +51,21 @@ public class JMSSpout extends BaseRichSpout {
         this.messages = new ArrayBlockingQueue<JMSMessage>(configurator.queueSize());
         this.collector = spoutOutputCollector;
 
-        try {
-            ConnectionFactory cf = this.configurator.connectionFactory();
-            for (Map.Entry<String, Destination> e : configurator.destinations().entrySet()) {
-                JMSConsumer consumer = new JMSConsumer(e.getKey(), cf, configurator.ackMode(), logger, messages, e.getValue());
-                consumer.open();
-
-                messageConsumers.put(e.getKey(), consumer);
+        configurator.getDestinationChanger().registerListener(new DestinationChangeListener() {
+            @Override
+            public void addDestination(String name, Destination destination) {
+                JMSConsumer consumer = new JMSConsumer(destination, logger, messages);
+                messageConsumers.put(name, consumer);
             }
-        } catch (Exception e) {
-            logger.warn("Error creating JMS connection.", e);
-        }
+
+            @Override
+            public void removeDestination(String name) {
+                JMSConsumer consumer = messageConsumers.remove(name);
+                if (consumer != null) {
+                    consumer.close();
+                }
+            }
+        });
     }
 
     @Override

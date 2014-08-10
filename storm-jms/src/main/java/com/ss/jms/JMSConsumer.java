@@ -1,5 +1,7 @@
 package com.ss.jms;
 
+import com.ss.commons.Destination;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,36 +18,56 @@ public class JMSConsumer {
 
     private Session session;
 
-    private int ackMode;
-
     private Logger logger;
 
     private BlockingQueue<JMSMessage> messages;
 
-    private Destination destination;
-
     private Lock lock = new ReentrantLock();
 
-    private String queue;
+    private Destination destination;
 
-    public JMSConsumer(String queue, ConnectionFactory cf, int ackMode, Logger logger,
-                       BlockingQueue<JMSMessage> messages, Destination destination) {
-        this.cf = cf;
-        this.ackMode = ackMode;
+    public JMSConsumer(Destination destination, Logger logger,
+                       BlockingQueue<JMSMessage> messages) {
         this.logger = logger;
         this.messages = messages;
         this.destination = destination;
-        this.queue = queue;
     }
 
     public void open() {
         try {
+            boolean isQueue = false;
+            final String queue = destination.getProperty("queue");
+
+            if (queue == null) {
+                String msg = "The property queue must be specified";
+                logger.error(msg);
+                throw new RuntimeException(msg);
+            }
+
+            String ackModeStringValue = destination.getProperty("ackMode");
+            String isQueueStringValue = destination.getProperty("isQueue");
+            int ackMode = Session.AUTO_ACKNOWLEDGE;
+            if (ackModeStringValue != null) {
+                ackMode = Integer.parseInt(ackModeStringValue);
+            }
+            if (isQueueStringValue != null) {
+                isQueue = Boolean.parseBoolean(isQueueStringValue);
+            }
             logger.info("Opening JMS Consumer for destination {}", queue);
+
+            this.cf = new ActiveMQConnectionFactory(destination.getUrl());
             this.connection = cf.createConnection();
-            this.session = connection.createSession(false, this.ackMode);
+            this.session = connection.createSession(false, ackMode);
             this.connection.start();
 
-            MessageConsumer consumer = session.createConsumer(destination);
+            javax.jms.Destination dest;
+            if (!isQueue) {
+                dest = session.createTopic(queue);
+            } else {
+                dest = session.createQueue(queue);
+            }
+
+            MessageConsumer consumer = session.createConsumer(dest);
             consumer.setMessageListener(new MessageListener() {
                 @Override
                 public void onMessage(Message message) {
