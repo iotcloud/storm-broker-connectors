@@ -7,6 +7,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import com.ss.commons.BoltConfigurator;
 import com.ss.commons.DestinationChangeListener;
+import com.ss.commons.DestinationChanger;
 import com.ss.commons.DestinationConfiguration;
 import com.ss.rabbitmq.*;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class RabbitMQBolt extends BaseRichBolt {
 
     private boolean isReQueueOnFail = false;
 
+    private DestinationChanger destinationChanger;
 
     public RabbitMQBolt(BoltConfigurator configurator, ErrorReporter reporter) {
         this.configurator = configurator;
@@ -50,7 +52,8 @@ public class RabbitMQBolt extends BaseRichBolt {
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
 
-        configurator.getDestinationChanger().registerListener(new DestinationChangeListener() {
+        destinationChanger = configurator.getDestinationChanger();
+        destinationChanger.registerListener(new DestinationChangeListener() {
             @Override
             public void addDestination(String name, DestinationConfiguration destination) {
                 RabbitMQProducer producer = new RabbitMQProducer(reporter, destination, prefetchCount, isReQueueOnFail);
@@ -67,7 +70,7 @@ public class RabbitMQBolt extends BaseRichBolt {
             }
         });
 
-        configurator.getDestinationChanger().start();
+        destinationChanger.start();
     }
 
     @Override

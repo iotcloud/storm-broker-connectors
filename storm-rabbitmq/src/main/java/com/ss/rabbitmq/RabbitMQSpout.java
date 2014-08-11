@@ -4,10 +4,7 @@ import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
-import com.ss.commons.DestinationChangeListener;
-import com.ss.commons.DestinationConfiguration;
-import com.ss.commons.MessageContext;
-import com.ss.commons.SpoutConfigurator;
+import com.ss.commons.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +32,8 @@ public class RabbitMQSpout extends BaseRichSpout {
     private boolean isReQueueOnFail = false;
 
     private boolean autoAck = true;
+
+    private DestinationChanger destinationChanger;
 
     public RabbitMQSpout(SpoutConfigurator configurator, ErrorReporter reporter) {
         this(configurator, reporter, LoggerFactory.getLogger(RabbitMQSpout.class));
@@ -71,7 +70,8 @@ public class RabbitMQSpout extends BaseRichSpout {
     public void open(Map map, TopologyContext topologyContext, final SpoutOutputCollector spoutOutputCollector) {
         collector = spoutOutputCollector;
 
-        configurator.getDestinationChanger().registerListener(new DestinationChangeListener() {
+        destinationChanger = configurator.getDestinationChanger();
+        destinationChanger.registerListener(new DestinationChangeListener() {
             @Override
             public void addDestination(String name, DestinationConfiguration destination) {
                 MessageConsumer consumer = new MessageConsumer(messages, destination, reporter, logger, prefetchCount, isReQueueOnFail, autoAck);
@@ -88,7 +88,7 @@ public class RabbitMQSpout extends BaseRichSpout {
             }
         });
 
-        configurator.getDestinationChanger().start();
+        destinationChanger.start();
     }
 
     @Override

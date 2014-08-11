@@ -52,7 +52,7 @@ public class RabbitMQProducer {
     }
 
     private void readProps() {
-        queue = destination.getProperty("queue");
+        queue = destination.getProperty("queueName");
         if (queue == null) {
             String msg = "The property queue must be specified";
             logger.error(msg);
