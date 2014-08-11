@@ -87,6 +87,8 @@ public class RabbitMQSpout extends BaseRichSpout {
                 }
             }
         });
+
+        configurator.getDestinationChanger().start();
     }
 
     @Override
@@ -131,6 +133,7 @@ public class RabbitMQSpout extends BaseRichSpout {
 
     @Override
     public void close() {
+        configurator.getDestinationChanger().stop();
         for (MessageConsumer consumer : messageConsumers.values()) {
             consumer.close();
         }

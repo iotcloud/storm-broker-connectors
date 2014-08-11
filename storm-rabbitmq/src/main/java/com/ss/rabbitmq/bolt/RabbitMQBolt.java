@@ -67,6 +67,7 @@ public class RabbitMQBolt extends BaseRichBolt {
             }
         });
 
+        configurator.getDestinationChanger().start();
     }
 
     @Override
@@ -92,6 +93,8 @@ public class RabbitMQBolt extends BaseRichBolt {
 
     @Override
     public void cleanup() {
+        configurator.getDestinationChanger().stop();
+
         super.cleanup();
 
         for (RabbitMQProducer consumer : messageProducers.values()) {
