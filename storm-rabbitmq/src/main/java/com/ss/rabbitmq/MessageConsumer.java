@@ -51,7 +51,11 @@ public class MessageConsumer {
     }
 
     private void readProps() {
-        queue = destination.getSite() + "." + destination.getProperty("queueName");
+        if (destination.isGrouped()) {
+            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.get + destination.getProperty("queueName");
+        } else {
+            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("queueName");
+        }
         if (queue == null) {
             String msg = "The property queue must be specified";
             logger.error(msg);
