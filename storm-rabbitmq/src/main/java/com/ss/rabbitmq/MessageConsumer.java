@@ -51,18 +51,23 @@ public class MessageConsumer {
     }
 
     private void readProps() {
-        if (destination.isGrouped()) {
-            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getSensorId() + "." + destination.getProperty("queueName");
-        } else {
-            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("queueName");
-        }
-        if (queue == null) {
+        if (destination.getProperty("queueName") == null) {
             String msg = "The property queue must be specified";
             logger.error(msg);
             throw new RuntimeException(msg);
         }
 
-        routingKey = destination.getProperty("routingKey");
+        if (!destination.isGrouped()) {
+            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getSensorId() + "." + destination.getProperty("queueName");
+        } else {
+            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("queueName");
+        }
+
+        if (!destination.isGrouped()) {
+            routingKey = destination.getSite() + "." + destination.getSensor() + "." + destination.getSensorId() + "." + destination.getProperty("routingKey");
+        } else {
+            routingKey = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("routingKey");
+        }
         exchangeName = destination.getProperty("exchange");
     }
 
