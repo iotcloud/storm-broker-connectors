@@ -11,9 +11,15 @@ public class DestinationConfiguration implements Serializable {
 
     private Map<String, String> properties = new HashMap<String, String>();
 
-    public DestinationConfiguration(String name, String url) {
-        this.url = url;
+    private String sensor;
+
+    private String site;
+
+    public DestinationConfiguration(String name, String url, String site, String sensor) {
         this.name = name;
+        this.url = url;
+        this.site = site;
+        this.sensor = sensor;
     }
 
     public String getProperty(String name) {
@@ -34,5 +40,13 @@ public class DestinationConfiguration implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public String getSensor() {
+        return sensor;
+    }
+
+    public String getSite() {
+        return site;
     }
 }

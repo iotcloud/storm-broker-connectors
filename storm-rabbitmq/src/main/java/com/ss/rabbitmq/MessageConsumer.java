@@ -51,7 +51,7 @@ public class MessageConsumer {
     }
 
     private void readProps() {
-        queue = destination.getProperty("queueName");
+        queue = destination.getSite() + "." + destination.getProperty("queueName");
         if (queue == null) {
             String msg = "The property queue must be specified";
             logger.error(msg);
