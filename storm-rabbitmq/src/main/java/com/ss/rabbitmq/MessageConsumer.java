@@ -52,7 +52,7 @@ public class MessageConsumer {
 
     private void readProps() {
         if (destination.isGrouped()) {
-            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.get + destination.getProperty("queueName");
+            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getSensorId() + "." + destination.getProperty("queueName");
         } else {
             queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("queueName");
         }

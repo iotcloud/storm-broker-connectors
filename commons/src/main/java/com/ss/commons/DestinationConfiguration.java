@@ -17,6 +17,8 @@ public class DestinationConfiguration implements Serializable {
 
     private boolean grouped;
 
+    private String sensorId;
+
     public DestinationConfiguration(String name, String url, String site, String sensor) {
         this.name = name;
         this.url = url;
@@ -58,5 +60,13 @@ public class DestinationConfiguration implements Serializable {
 
     public void setGrouped(boolean grouped) {
         this.grouped = grouped;
+    }
+
+    public void setSensorId(String sensorId) {
+        this.sensorId = sensorId;
+    }
+
+    public String getSensorId() {
+        return sensorId;
     }
 }
