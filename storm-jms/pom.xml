@@ -30,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>storm-bcs</groupId>
-            <artifactId>commons</artifactId>
+            <artifactId>storm-bcs-commons</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
