@@ -75,8 +75,10 @@ public class RabbitMQProducer {
     }
 
     public void close() {
+        logger.info("Closing channel to queue {}", queue);
         try {
             if (channel != null && channel.isOpen()) {
+                channel.queueDelete(queue, true, false);
                 if (consumerTag != null) {
                     channel.basicCancel(consumerTag);
                 }
@@ -108,7 +110,7 @@ public class RabbitMQProducer {
             }
 
             channel.exchangeDeclare(exchangeName, "direct", false);
-            channel.queueDeclare(queue, true, false, false, null);
+            channel.queueDeclare(queue, false, false, true, null);
             channel.queueBind(queue, exchangeName, routingKey);
         } catch (Exception e) {
             reset();
