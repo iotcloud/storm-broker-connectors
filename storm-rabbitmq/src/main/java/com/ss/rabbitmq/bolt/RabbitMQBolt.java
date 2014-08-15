@@ -96,7 +96,7 @@ public class RabbitMQBolt extends BaseRichBolt {
 
     @Override
     public void cleanup() {
-        configurator.getDestinationChanger().stop();
+        destinationChanger.stop();
 
         super.cleanup();
 

@@ -149,9 +149,11 @@ public class MessageConsumer {
             connection.addShutdownListener(new ShutdownListener() {
                 @Override
                 public void shutdownCompleted(ShutdownSignalException cause) {
-                    logger.error("shutdown signal received", cause);
-                    reporter.reportError(cause);
-                    reset();
+//                    if (cause.isHardError()) {
+//                        logger.error("shutdown signal received", cause);
+//                        reporter.reportError(cause);
+//                        reset();
+//                    }
                 }
             });
             logger.info("connected to rabbitmq: " + connection + " for " + queue);
