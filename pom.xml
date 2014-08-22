@@ -14,6 +14,7 @@
         <module>examples</module>
         <module>storm-kestrel</module>
         <module>commons</module>
+        <module>storm-kafka</module>
     </modules>
 
     <properties>
@@ -24,7 +25,7 @@
         <storm.jms.version>0.9.1-SNAPSHOT</storm.jms.version>
         <slf4j.version>1.7.6</slf4j.version>
         <log4j.version>1.2.17</log4j.version>
-        <curator.version>2.4.0</curator.version>
+        <curator.version>2.6.0</curator.version>
         <zookeeper.version>3.4.5</zookeeper.version>
         <mqtt.version>1.10</mqtt.version>
         <libthrift.version>0.9.1</libthrift.version>
@@ -99,39 +100,7 @@
             <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-recipes</artifactId>
-                <version>${curator.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.zookeeper</groupId>
-                <artifactId>zookeeper</artifactId>
-                <version>${zookeeper.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.sun.jmx</groupId>
-                        <artifactId>jmxri</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.sun.jdmk</groupId>
-                        <artifactId>jmxtools</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.jms</groupId>
-                        <artifactId>jms</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-log4j12</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                </exclusions>
+                <version>2.6.0</version>
             </dependency>
 
             <dependency>
