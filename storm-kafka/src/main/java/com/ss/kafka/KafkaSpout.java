@@ -30,10 +30,6 @@ public class KafkaSpout extends BaseRichSpout {
 
     private BlockingQueue<MessageContext> messages;
 
-    private int prefetchCount = 0;
-
-    private boolean isReQueueOnFail = false;
-
     private boolean autoAck = true;
 
     private DestinationChanger destinationChanger;
@@ -41,16 +37,6 @@ public class KafkaSpout extends BaseRichSpout {
     public KafkaSpout(SpoutConfigurator configurator) {
         this.configurator = configurator;
         this.messages = new ArrayBlockingQueue<MessageContext>(configurator.queueSize());
-
-        String prefetchCountString = configurator.getProperties().get("prefectCount");
-        if (prefetchCountString != null) {
-            prefetchCount = Integer.parseInt(prefetchCountString);
-        }
-
-        String isReQueueOnFailString = configurator.getProperties().get("reQueue");
-        if (isReQueueOnFailString != null) {
-            isReQueueOnFail = Boolean.parseBoolean(isReQueueOnFailString);
-        }
 
         String ackModeStringValue = configurator.getProperties().get("ackMode");
         if (ackModeStringValue != null && ackModeStringValue.equals("manual")) {
@@ -64,14 +50,17 @@ public class KafkaSpout extends BaseRichSpout {
     }
 
     @Override
-    public void open(Map map, TopologyContext topologyContext, final SpoutOutputCollector spoutOutputCollector) {
+    public void open(Map map, TopologyContext context, final SpoutOutputCollector spoutOutputCollector) {
         collector = spoutOutputCollector;
         final ConsumerConfig consumerConfig = new ConsumerConfig(null, null, null, null);
+        final int totalTasks = context.getComponentTasks(context.getThisComponentId()).size();
+        final int taskIndex = context.getThisTaskIndex();
+
         destinationChanger = configurator.getDestinationChanger();
         destinationChanger.registerListener(new DestinationChangeListener() {
             @Override
             public void addDestination(String name, DestinationConfiguration destination) {
-                KConsumer consumer = new KConsumer(null, messages, consumerConfig);
+                KConsumer consumer = new KConsumer(destination, messages, totalTasks, taskIndex);
                 consumer.start();
                 messageConsumers.put(name, consumer);
             }
