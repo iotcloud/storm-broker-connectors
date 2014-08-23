@@ -42,10 +42,15 @@ public class KConsumer {
 
     String _site;
 
-    public KConsumer(String _site, BlockingQueue<MessageContext> messageContexts, ConsumerConfig consumerConfig) {
+    int _totalTasks;
+    int _taskIndex;
+
+    public KConsumer(String _site, BlockingQueue<MessageContext> messageContexts, ConsumerConfig consumerConfig, int totalTasks, int taskIndex) {
         this._site = _site;
         this._consumerConfig = consumerConfig;
         this.messageContexts = messageContexts;
+        this._totalTasks = totalTasks;
+        this._taskIndex = taskIndex;
     }
 
     private void close() {
@@ -105,7 +110,7 @@ public class KConsumer {
         _connections = new DynamicPartitionConnections(_consumerConfig, KafkaUtils.makeBrokerReader(_consumerConfig));
 
         // using TransactionalState like this is a hack
-        _coordinator = new ZkCoordinator(_connections, _consumerConfig, _state, 0, 1, _uuid, _site);
+        _coordinator = new ZkCoordinator(_connections, _consumerConfig, _state, _taskIndex, _totalTasks, _uuid, _site);
 
         Thread t = new Thread(new Worker());
         t.start();
