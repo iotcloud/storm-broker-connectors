@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class KafkaBolt extends BaseRichBolt {
-    private static Logger logger = LoggerFactory.getLogger(KafkaBolt.class);
+    private static Logger LOG = LoggerFactory.getLogger(KafkaBolt.class);
 
     private Map<String, KProducer> messageProducers = new HashMap<String, KProducer>();
 

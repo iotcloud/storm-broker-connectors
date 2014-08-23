@@ -5,6 +5,7 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
 import com.ss.commons.*;
+import com.ss.kafka.consumer.ConsumerConfig;
 import com.ss.kafka.consumer.KConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,12 +66,12 @@ public class KafkaSpout extends BaseRichSpout {
     @Override
     public void open(Map map, TopologyContext topologyContext, final SpoutOutputCollector spoutOutputCollector) {
         collector = spoutOutputCollector;
-
+        final ConsumerConfig consumerConfig = new ConsumerConfig(null, null, null, null);
         destinationChanger = configurator.getDestinationChanger();
         destinationChanger.registerListener(new DestinationChangeListener() {
             @Override
             public void addDestination(String name, DestinationConfiguration destination) {
-                KConsumer consumer = new KConsumer(messages, destination, prefetchCount, isReQueueOnFail, autoAck);
+                KConsumer consumer = new KConsumer(null, messages, consumerConfig);
                 consumer.start();
                 messageConsumers.put(name, consumer);
             }
@@ -102,32 +103,6 @@ public class KafkaSpout extends BaseRichSpout {
     }
 
     @Override
-    public void ack(Object msgId) {
-        if (msgId instanceof String) {
-            if (!autoAck) {
-                String name =  queueMessageMap.remove(msgId);
-                if (name != null) {
-                    KConsumer consumer = messageConsumers.get(name);
-                    if (consumer != null) {
-                        consumer.ackMessage(Long.parseLong(msgId.toString()));
-                    }
-                }
-            }
-        }
-    }
-
-    @Override
-    public void fail(Object msgId) {
-        if (msgId instanceof String) {
-            if (!autoAck) {
-                String name =  queueMessageMap.remove(msgId);
-                KConsumer consumer = messageConsumers.get(name);
-                consumer.failMessage(Long.parseLong(msgId.toString()));
-            }
-        }
-    }
-
-    @Override
     public void close() {
         destinationChanger.stop();
         for (KConsumer consumer : messageConsumers.values()) {
@@ -149,10 +124,6 @@ public class KafkaSpout extends BaseRichSpout {
         } catch (Exception e) {
             LOG.warn("Deserialization error for msgId " + deliveryTag, e);
             collector.reportError(e);
-        }
-        KConsumer consumer = messageConsumers.get(delivery.getOriginDestination());
-        if (consumer != null) {
-            consumer.deadLetter(Long.parseLong(delivery.getId()));
         }
         return Collections.emptyList();
     }
