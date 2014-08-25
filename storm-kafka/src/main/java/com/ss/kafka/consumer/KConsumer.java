@@ -51,12 +51,12 @@ public class KConsumer {
     private Map<String, String> properties;
 
     public KConsumer(DestinationConfiguration destination, BlockingQueue<MessageContext> messageContexts, int totalTasks, int taskIndex, Map<String, String> properties) {
+        this.properties = properties;
         this._site = destination.getSite();
         this._consumerConfig = getConsumerConfig(destination);
         this.messageContexts = messageContexts;
         this._totalTasks = totalTasks;
         this._taskIndex = taskIndex;
-        this.properties = properties;
     }
 
     private ConsumerConfig getConsumerConfig(DestinationConfiguration destination) {
