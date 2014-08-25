@@ -13,6 +13,7 @@ import java.util.Set;
 
 public class KProducer {
     private static Logger LOG = LoggerFactory.getLogger(KProducer.class);
+    private final Map<String, String> properties;
 
     private Producer<byte[], byte []> producer;
 
@@ -20,12 +21,13 @@ public class KProducer {
 
     private String queue;
 
-    public KProducer(DestinationConfiguration destination) {
+    public KProducer(DestinationConfiguration destination, Map<String, String> properties) {
         this.destination = destination;
+        this.properties = properties;
     }
 
     public void open() {
-        Properties props = mapToProperties(destination.getProperties());
+        Properties props = mapToProperties(properties);
         ProducerConfig config = new ProducerConfig(props);
         producer = new Producer<byte[], byte []>(config);
 

@@ -1,6 +1,7 @@
 package com.ss.kafka.consumer;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.ss.commons.DestinationConfiguration;
 import com.ss.commons.MessageContext;
@@ -47,27 +48,30 @@ public class KConsumer {
     int _totalTasks;
     int _taskIndex;
 
-    public KConsumer(DestinationConfiguration destination, BlockingQueue<MessageContext> messageContexts, int totalTasks, int taskIndex) {
+    private Map<String, String> properties;
+
+    public KConsumer(DestinationConfiguration destination, BlockingQueue<MessageContext> messageContexts, int totalTasks, int taskIndex, Map<String, String> properties) {
         this._site = destination.getSite();
         this._consumerConfig = getConsumerConfig(destination);
         this.messageContexts = messageContexts;
         this._totalTasks = totalTasks;
         this._taskIndex = taskIndex;
+        this.properties = properties;
     }
 
     private ConsumerConfig getConsumerConfig(DestinationConfiguration destination) {
         destination.getUrl();
         String queue;
-        ZkHosts zkHosts = new ZkHosts("localhost:2181", "/brokers");
-        String zkRoot = "/brokers";
+        String zkHost = properties.get("broker.zk.servers");
+        String zkRoot = properties.get("broker.zk.root");
+        ZkHosts zkHosts = new ZkHosts(zkHost, zkRoot);
         if (!destination.isGrouped()) {
             queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getSensorId() + "." + destination.getProperty("queueName");
         } else {
             queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("queueName");
         }
-        ConsumerConfig consumerConfig = new ConsumerConfig(zkHosts, queue, zkRoot, queue);
-        consumerConfig.zkServers = Lists.newArrayList("localhost:2181");
-
+        ConsumerConfig consumerConfig = new ConsumerConfig(zkHosts, queue, "/iot/broker", queue);
+        consumerConfig.zkServers = Splitter.on(",").splitToList(zkHost);
         return consumerConfig;
     }
 

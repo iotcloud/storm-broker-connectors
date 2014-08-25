@@ -60,7 +60,7 @@ public class KafkaSpout extends BaseRichSpout {
         destinationChanger.registerListener(new DestinationChangeListener() {
             @Override
             public void addDestination(String name, DestinationConfiguration destination) {
-                KConsumer consumer = new KConsumer(destination, messages, totalTasks, taskIndex);
+                KConsumer consumer = new KConsumer(destination, messages, totalTasks, taskIndex, configurator.getProperties());
                 consumer.start();
                 messageConsumers.put(name, consumer);
             }

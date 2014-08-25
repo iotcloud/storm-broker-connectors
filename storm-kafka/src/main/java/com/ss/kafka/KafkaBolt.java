@@ -36,7 +36,7 @@ public class KafkaBolt extends BaseRichBolt {
         destinationChanger.registerListener(new DestinationChangeListener() {
             @Override
             public void addDestination(String name, DestinationConfiguration destination) {
-                KProducer producer = new KProducer(destination);
+                KProducer producer = new KProducer(destination, configurator.getProperties());
                 producer.open();
                 messageProducers.put(name, producer);
             }
