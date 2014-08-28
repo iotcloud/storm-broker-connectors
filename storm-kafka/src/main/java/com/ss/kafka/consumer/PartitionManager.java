@@ -91,7 +91,9 @@ public class PartitionManager {
         }
 
         try {
-            MessageContext messageContext = new MessageContext(null, null, null);
+            byte []b = new byte[toEmit.msg.payload().remaining()];
+            toEmit.msg.payload().get(b);
+            MessageContext messageContext = new MessageContext(b, null);
             collector.put(messageContext);
         } catch (Exception e) {
             LOG.error("Failed to convert the bytes to Thrift object", e);

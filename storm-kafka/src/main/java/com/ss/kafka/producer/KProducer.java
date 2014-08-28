@@ -32,9 +32,9 @@ public class KProducer {
         producer = new Producer<byte[], byte []>(config);
 
         if (!destination.isGrouped()) {
-            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getSensorId() + "." + destination.getProperty("queueName");
+            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getSensorId() + "." + destination.getProperty("topic");
         } else {
-            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("queueName");
+            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("topic");
         }
     }
 

@@ -56,13 +56,13 @@ public class KafkaBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         try {
-            MessageContext message = (MessageContext) configurator.getMessageBuilder().serialize(tuple, null);
+            KafkaMessage message = (KafkaMessage) configurator.getMessageBuilder().serialize(tuple, null);
             String destination = configurator.getDestinationSelector().select(tuple);
             if (destination != null) {
                 KProducer producer = messageProducers.get(destination);
                 if (producer != null) {
-                    byte []key = (byte[]) message.getHeaders().get("key");
-                    producer.send(key, (byte[]) message.getMessage());
+                    byte []key = message.getKey().getBytes();
+                    producer.send(key, message.getBody());
                 }
             }
         } finally {

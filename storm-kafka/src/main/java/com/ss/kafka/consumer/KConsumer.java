@@ -66,12 +66,17 @@ public class KConsumer {
         String zkRoot = properties.get("broker.zk.root");
         ZkHosts zkHosts = new ZkHosts(zkHost, zkRoot);
         if (!destination.isGrouped()) {
-            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getSensorId() + "." + destination.getProperty("queueName");
+            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getSensorId() + "." + destination.getProperty("topic");
         } else {
-            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("queueName");
+            queue = destination.getSite() + "." + destination.getSensor() + "." + destination.getProperty("topic");
         }
         ConsumerConfig consumerConfig = new ConsumerConfig(zkHosts, queue, "/iot/broker", queue);
-        consumerConfig.zkServers = Splitter.on(",").splitToList(zkHost);
+        Iterable<String> iterable = Splitter.on(",").split(zkHost);
+        Iterator<String> it = iterable.iterator();
+        consumerConfig.zkServers = new ArrayList<String>();
+        while (it.hasNext()) {
+            consumerConfig.zkServers.add(it.next());
+        }
         return consumerConfig;
     }
 
