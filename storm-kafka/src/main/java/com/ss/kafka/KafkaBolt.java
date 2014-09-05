@@ -29,7 +29,7 @@ public class KafkaBolt extends BaseRichBolt {
     }
 
     @Override
-    public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
+    public void prepare(Map map, TopologyContext context, OutputCollector outputCollector) {
         this.collector = outputCollector;
 
         destinationChanger = configurator.getDestinationChanger();
@@ -49,7 +49,9 @@ public class KafkaBolt extends BaseRichBolt {
                 }
             }
         });
-
+        final int totalTasks = context.getComponentTasks(context.getThisComponentId()).size();
+        final int taskIndex = context.getThisTaskIndex();
+        destinationChanger.setTask(taskIndex, totalTasks);
         destinationChanger.start();
     }
 

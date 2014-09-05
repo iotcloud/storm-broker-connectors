@@ -52,7 +52,6 @@ public class KafkaSpout extends BaseRichSpout {
     @Override
     public void open(Map map, TopologyContext context, final SpoutOutputCollector spoutOutputCollector) {
         collector = spoutOutputCollector;
-        final ConsumerConfig consumerConfig = new ConsumerConfig(null, null, null, null);
         final int totalTasks = context.getComponentTasks(context.getThisComponentId()).size();
         final int taskIndex = context.getThisTaskIndex();
 
@@ -73,7 +72,7 @@ public class KafkaSpout extends BaseRichSpout {
                 }
             }
         });
-
+        destinationChanger.setTask(taskIndex, totalTasks);
         destinationChanger.start();
     }
 

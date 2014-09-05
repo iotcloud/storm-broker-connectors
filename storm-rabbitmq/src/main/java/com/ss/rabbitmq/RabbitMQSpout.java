@@ -67,7 +67,7 @@ public class RabbitMQSpout extends BaseRichSpout {
     }
 
     @Override
-    public void open(Map map, TopologyContext topologyContext, final SpoutOutputCollector spoutOutputCollector) {
+    public void open(Map map, TopologyContext context, final SpoutOutputCollector spoutOutputCollector) {
         collector = spoutOutputCollector;
 
         destinationChanger = configurator.getDestinationChanger();
@@ -87,7 +87,9 @@ public class RabbitMQSpout extends BaseRichSpout {
                 }
             }
         });
-
+        final int totalTasks = context.getComponentTasks(context.getThisComponentId()).size();
+        final int taskIndex = context.getThisTaskIndex();
+        destinationChanger.setTask(taskIndex, totalTasks);
         destinationChanger.start();
     }
 
