@@ -89,14 +89,17 @@ public class KafkaSpout extends BaseRichSpout {
     @Override
     public void nextTuple() {
         MessageContext message;
-        while ((message = messages.poll()) != null) {
-            List<Object> tuple = extractTuple(message);
-            if (!tuple.isEmpty()) {
-                collector.emit(tuple, message.getId());
-                if (!autoAck) {
-                    queueMessageMap.put(message.getId(), message.getOriginDestination());
+        try {
+            while ((message = messages.take()) != null) {
+                List<Object> tuple = extractTuple(message);
+                if (!tuple.isEmpty()) {
+                    collector.emit(tuple, message.getId());
+                    if (!autoAck) {
+                        queueMessageMap.put(message.getId(), message.getOriginDestination());
+                    }
                 }
             }
+        } catch (InterruptedException ignore) {
         }
     }
 
