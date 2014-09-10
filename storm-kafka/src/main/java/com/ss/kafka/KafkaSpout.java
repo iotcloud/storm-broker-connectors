@@ -71,6 +71,16 @@ public class KafkaSpout extends BaseRichSpout {
                     consumer.stop();
                 }
             }
+
+            @Override
+            public void addPathToDestination(String s, String s2) {
+
+            }
+
+            @Override
+            public void removePathToDestination(String s, String s2) {
+
+            }
         });
         destinationChanger.setTask(taskIndex, totalTasks);
         destinationChanger.start();

@@ -17,9 +17,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RabbitMQBolt extends BaseRichBolt {
-    private static Logger logger = LoggerFactory.getLogger(RabbitMQBolt.class);
+    private static Logger LOG = LoggerFactory.getLogger(RabbitMQBolt.class);
 
     private Map<String, RabbitMQProducer> messageProducers = new HashMap<String, RabbitMQProducer>();
+
+    private Map<String, String> pathToDestinations = new HashMap<String, String>();
 
     private OutputCollector collector;
 
@@ -68,6 +70,16 @@ public class RabbitMQBolt extends BaseRichBolt {
                     producer.close();
                 }
             }
+
+            @Override
+            public void addPathToDestination(String name, String path) {
+                pathToDestinations.put(path, name);
+            }
+
+            @Override
+            public void removePathToDestination(String name, String path) {
+                pathToDestinations.remove(path);
+            }
         });
         final int totalTasks = context.getComponentTasks(context.getThisComponentId()).size();
         final int taskIndex = context.getThisTaskIndex();
@@ -82,10 +94,19 @@ public class RabbitMQBolt extends BaseRichBolt {
             RabbitMQMessage message = (RabbitMQMessage) configurator.getMessageBuilder().serialize(tuple, null);
             String destination = configurator.getDestinationSelector().select(tuple);
             if (destination != null) {
-                RabbitMQProducer producer = messageProducers.get(destination);
-                if (producer != null) {
-                    producer.send(message);
+                String dest = pathToDestinations.get(destination);
+                if (dest != null) {
+                    RabbitMQProducer producer = messageProducers.get(dest);
+                    if (producer != null) {
+                        producer.send(message);
+                    } else {
+                        LOG.warn("Cannot find producer for path {} and destination {}", dest, destination);
+                    }
+                } else {
+                    LOG.warn("Cannot find path destination {}", destination);
                 }
+            } else {
+                LOG.warn("Cannot find destination for tuple {}", tuple);
             }
         } finally {
             collector.ack(tuple);

@@ -73,6 +73,16 @@ public class JMSBolt extends BaseRichBolt {
                         producer.close();
                     }
                 }
+
+                @Override
+                public void addPathToDestination(String name, String path) {
+
+                }
+
+                @Override
+                public void removePathToDestination(String name, String path) {
+
+                }
             });
         } catch (Exception e) {
             logger.warn("Error creating JMS connection.", e);

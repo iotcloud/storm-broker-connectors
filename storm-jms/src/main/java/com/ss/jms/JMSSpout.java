@@ -79,6 +79,16 @@ public class JMSSpout extends BaseRichSpout {
                     consumer.close();
                 }
             }
+
+            @Override
+            public void addPathToDestination(String name, String path) {
+
+            }
+
+            @Override
+            public void removePathToDestination(String name, String path) {
+
+            }
         });
     }
 

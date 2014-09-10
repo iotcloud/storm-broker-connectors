@@ -86,6 +86,16 @@ public class RabbitMQSpout extends BaseRichSpout {
                     consumer.close();
                 }
             }
+
+            @Override
+            public void addPathToDestination(String name, String path) {
+
+            }
+
+            @Override
+            public void removePathToDestination(String name, String path) {
+
+            }
         });
         final int totalTasks = context.getComponentTasks(context.getThisComponentId()).size();
         final int taskIndex = context.getThisTaskIndex();
