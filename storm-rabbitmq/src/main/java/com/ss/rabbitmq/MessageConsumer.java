@@ -144,6 +144,9 @@ public class MessageConsumer {
     private Connection createConnection() throws IOException {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
+            connectionFactory.setAutomaticRecoveryEnabled(true);
+            connectionFactory.setNetworkRecoveryInterval(5000);
+
             connectionFactory.setUri(destination.getUrl());
             Connection connection = connectionFactory.newConnection();
             connection.addShutdownListener(new ShutdownListener() {
