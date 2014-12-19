@@ -110,7 +110,7 @@ public class RabbitMQProducer {
             }
 
             channel.exchangeDeclare(exchangeName, "direct", false);
-            channel.queueDeclare(queue, false, false, true, null);
+            channel.queueDeclare(queue, false, false, false, null);
             channel.queueBind(queue, exchangeName, routingKey);
         } catch (Exception e) {
             reset();
