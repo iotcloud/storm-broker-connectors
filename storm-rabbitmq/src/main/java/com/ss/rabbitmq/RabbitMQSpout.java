@@ -110,7 +110,11 @@ public class RabbitMQSpout extends BaseRichSpout {
             while ((message = messages.take()) != null) {
                 List<Object> tuple = extractTuple(message);
                 if (!tuple.isEmpty()) {
-                    collector.emit(tuple, message.getId());
+                    if (configurator.getStream() == null) {
+                        collector.emit(tuple, message.getId());
+                    } else {
+                        collector.emit(configurator.getStream(), tuple, message.getId());
+                    }
                     if (!autoAck) {
                         queueMessageMap.put(message.getId(), message.getOriginDestination());
                     }

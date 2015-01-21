@@ -15,4 +15,6 @@ public interface SpoutConfigurator extends Serializable {
     Map<String, String> getProperties();
 
     DestinationChanger getDestinationChanger();
+
+    String getStream();
 }
