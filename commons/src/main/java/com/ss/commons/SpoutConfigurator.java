@@ -1,6 +1,6 @@
 package com.ss.commons;
 
-import backtype.storm.topology.OutputFieldsDeclarer;
+import com.twitter.heron.api.topology.OutputFieldsDeclarer;
 
 import java.io.Serializable;
 import java.util.Map;

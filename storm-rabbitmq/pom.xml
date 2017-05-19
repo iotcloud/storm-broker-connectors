@@ -7,7 +7,7 @@
     <parent>
         <groupId>storm-bcs</groupId>
         <artifactId>storm-bcs</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0-heron-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>storm-rabbitmq</artifactId>
@@ -20,6 +20,11 @@
     <!--</repositories>-->
 
     <dependencies>
+        <dependency>
+            <groupId>com.twitter.heron</groupId>
+            <artifactId>heron-storm</artifactId>
+            <version>0.14-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.storm</groupId>
             <artifactId>storm-core</artifactId>

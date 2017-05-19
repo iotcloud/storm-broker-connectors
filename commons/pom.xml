@@ -5,7 +5,7 @@
     <parent>
         <artifactId>storm-bcs</artifactId>
         <groupId>storm-bcs</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0-heron-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -16,9 +16,9 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.storm</groupId>
-            <artifactId>storm-core</artifactId>
-            <scope>provided</scope>
+            <groupId>com.twitter.heron</groupId>
+            <artifactId>heron-storm</artifactId>
+            <version>0.14-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

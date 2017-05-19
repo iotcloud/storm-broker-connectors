@@ -1,6 +1,6 @@
 package com.ss.commons;
 
-import backtype.storm.tuple.Tuple;
+import com.twitter.heron.api.tuple.Tuple;
 
 import java.io.Serializable;
 import java.util.List;

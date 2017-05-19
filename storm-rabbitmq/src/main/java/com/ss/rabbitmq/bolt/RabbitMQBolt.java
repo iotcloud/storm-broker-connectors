@@ -1,15 +1,15 @@
 package com.ss.rabbitmq.bolt;
 
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Tuple;
 import com.ss.commons.BoltConfigurator;
 import com.ss.commons.DestinationChangeListener;
 import com.ss.commons.DestinationChanger;
 import com.ss.commons.DestinationConfiguration;
 import com.ss.rabbitmq.*;
+import com.twitter.heron.api.bolt.BaseRichBolt;
+import com.twitter.heron.api.bolt.OutputCollector;
+import com.twitter.heron.api.topology.OutputFieldsDeclarer;
+import com.twitter.heron.api.topology.TopologyContext;
+import com.twitter.heron.api.tuple.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
